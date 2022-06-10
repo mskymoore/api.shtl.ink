@@ -4,9 +4,9 @@ install-dependencies:
 lint-diff:
 	python3 -m autopep8 --recursive --aggressive --aggressive --diff .
 
-lint-in-place:
+lint-do:
 	python3 -m autopep8 --recursive --aggressive --aggressive --in-place .
 
 test:
-	python3 -m pytest --verbose *_test.py
+	python3 -m pytest --verbose 
 
