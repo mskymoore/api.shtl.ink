@@ -8,15 +8,16 @@ from sqlalchemy.orm import Session, declarative_base
 
 
 # create database
-db = create_engine("sqlite:///url_records.db", echo=False, future=True)
+db = create_engine('sqlite:///url_records.db', echo=False, future=True)
 Base = declarative_base()
 
 
 class URLTable(Base):
     """
-
+    URLTable: Schema for database table with three columns, id(the primary key),
+        long_url(the original url), and short_url(the shortened url)
     """
-    __tablename__ = "short_urls"
+    __tablename__ = 'short_urls'
     id = Column(Integer, primary_key=True)
     # 2000 characters is defacto max url length
     long_url = Column(String(2000))
@@ -29,15 +30,16 @@ class URLTable(Base):
 
 Base.metadata.create_all(db)
 
-# decorator for db session
-
 
 def db_session(function):
     """
-
+    @db_session: Decorator which uses a context manager to supply the decorated function
+        with a sqlalchemy.orm.Session object
+    create_session() Inner function of db_session decorator, checks kwargs for a Session and 
+        supplies it to the passed function object with a context manager if it's absent
     """
     def create_session(*args, **kwargs):
-        if 'session' in kwargs:
+        if 'session' in kwargs and isinstance(kwargs['session'], Session):
             short_url = function(*args, **kwargs)
         else:
             with Session(db) as session:
@@ -49,9 +51,13 @@ def db_session(function):
 
 class Codec:
     """
-    Codec: Shortens long urls using bijective conversion based on row id in database
-    Codec.encode() takes a string and a sqlalchemy.orm.Session object, overwrites or adds
-                   the record and returns the short code
+    Codec: Shortens long urls and returns original urls, urls are stored in a database.
+    Codec.primary_key_encode() takes a primary_key, a sqlalchemy.orm.Session object, and
+        an optional multiplier returns a unique short code
+    Codec.encode() takes a url string and a sqlalchemy.orm.Session object, overwrites or adds
+        the record and returns the short code
+    Codec.decode() takes a shortened url string and a sqlalchemy.orm.Session object, queries
+        database for shortened url, returns original url or None
     """
 
     def __init__(self, base_url: str):
@@ -84,8 +90,10 @@ class Codec:
 
     @db_session
     def encode(self, long_url: str, session=None) -> str:
+        
         if len(long_url) > 2000:
             raise Exception("URL is too long, max length is 2000 characters.")
+
         # check for url in db
         url_record = session.query(URLTable)\
             .filter(URLTable.long_url == long_url).first()
@@ -111,6 +119,7 @@ class Codec:
     def decode(self, short_url: str, session=None) -> str:
         url_records = session.query(URLTable)\
             .filter(URLTable.short_url == short_url).all()
+
         num_records = len(url_records)
         if num_records > 1:
             raise Exception("More than one record returned.")
