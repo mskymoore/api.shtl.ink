@@ -8,5 +8,5 @@ lint-do:
 	python3 -m autopep8 --recursive --aggressive --aggressive --in-place .
 
 test:
-	python3 -m pytest --verbose 
+	python3 -m pytest --verbose --cov=src src/tests
 
