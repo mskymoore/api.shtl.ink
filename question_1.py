@@ -61,7 +61,7 @@ class Codec:
     def encode(self, long_url: str, session: Session) -> str:
 
         if len(long_url) > 2000:
-            raise Exception("URL is too long, max length is 2000 characters.")
+            raise Exception("URL is too long, de facto max length is 2000 characters.")
 
         return self.url_encode(long_url, session, self.multiplier)
 
