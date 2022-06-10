@@ -20,5 +20,5 @@ class ShortURLModel(Base):
     short_code = Column(String(2000), primary_key=True)
 
     def __repr__(self):
-        return f"URL(id={self.id!r}, url={self.url!r}, \
+        return f"URL(url={self.url!r}, \
                  short_code={self.short_code!r})"
