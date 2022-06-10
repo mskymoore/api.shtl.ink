@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 def test_get_test_urls() -> List[str]:
-    with open('input_urls.txt', 'r') as file:
+    with open('data/input_urls.txt', 'r') as file:
         return file.read().splitlines()
 
 
