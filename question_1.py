@@ -28,9 +28,9 @@ class Codec:
         self.shift_bits = 12
         self.multiplier = 333
 
-    def url_encode(self, long_url: str, session: Session, multiplier: int) -> str:
+    def url_encode(self, url: str, session: Session, multiplier: int) -> str:
         shift_bits = self.shift_bits
-        short_url = ''
+        short_code = ''
         # The number of available urls in this config is 13,983,816 by nCk(nChoosek)
         # where n is the total number of characters available and k is the number
         # of characters in the short code.  Don't know if it's possible to have
@@ -41,35 +41,37 @@ class Codec:
         key = seed * multiplier
 
         for _ in self.shifts:
-            short_url += self.alphabet[(key >> shift_bits) & self.base]
+            short_code += self.alphabet[(key >> shift_bits) & self.base]
             shift_bits -= 2
 
         try:
-            session.add(ShortURLModel(long_url=long_url, short_url=short_url))
+            session.add(ShortURLModel(
+                url=url, short_code=short_code))
             session.commit()
-            return short_url
+            return short_code
 
         # collision
         except IntegrityError:
             session.rollback()
             session.execute(delete(ShortURLModel).where(
-                ShortURLModel.long_url == long_url))
-            short_url = self.url_encode(long_url, session,
-                multiplier + random.choice(self.shifts))
-            return short_url
+                ShortURLModel.url == url))
+            short_code = self.url_encode(url, session,
+                                         multiplier + random.choice(self.shifts))
+            return short_code
 
-    def encode(self, long_url: str, session: Session) -> str:
+    def encode(self, url: str, session: Session) -> str:
 
-        if len(long_url) > 2000:
-            raise Exception("URL is too long, de facto max length is 2000 characters.")
+        if len(url) > 2000:
+            raise Exception(
+                "URL is too long, de facto max length is 2000 characters.")
 
-        return self.url_encode(long_url, session, self.multiplier)
+        return self.url_encode(url, session, self.multiplier)
 
-    def decode(self, short_url: str, session: Session) -> str:
-        url_record = session.get(ShortURLModel, (short_url))
+    def decode(self, short_code: str, session: Session) -> str:
+        url_record = session.get(ShortURLModel, (short_code))
 
         if url_record is None:
             return None
 
         else:
-            return url_record.long_url
+            return url_record.url
