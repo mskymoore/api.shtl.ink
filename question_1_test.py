@@ -36,7 +36,7 @@ def sqlite_session(sqlite_file) -> Session:
 def test_load_database_encode_decode(sqlite_session) -> None:
     """
     Create and load test database in sqlite, a local file called url_records.db
-    test the functionality as data is loaded by assuring the decoded url is the 
+    test the functionality as data is loaded by assuring the decoded url is the
     same as the input url.
     """
 

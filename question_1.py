@@ -55,8 +55,12 @@ class Codec:
             session.rollback()
             session.execute(delete(ShortURLModel).where(
                 ShortURLModel.url == url))
-            short_code = self.url_encode(url, session,
-                                         multiplier + random.choice(self.shifts))
+            short_code = self.url_encode(
+                url,
+                session,
+                multiplier +
+                random.choice(
+                    self.shifts))
             return short_code
 
     def encode(self, url: str, session: Session) -> str:
