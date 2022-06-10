@@ -4,3 +4,4 @@ __py*
 .coverage
 *cache*
 *journal*.db
+*.zip
