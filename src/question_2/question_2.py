@@ -4,9 +4,6 @@
 Chose api.shrtco.de/v2 because it's very simple, easy to use, and does not require authentication.
 """
 import requests
-import bs4
-import random
-import json
 
 
 class Codec:
