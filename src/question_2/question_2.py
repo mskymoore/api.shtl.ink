@@ -30,18 +30,20 @@ class Codec:
 
         if response.status_code == 201:
             return response.json()['result']['short_link']
-        
-        else:
-            raise Exception(f"Request failed with status code: {response.status_code}\nreason: {response.reason}")
 
+        else:
+            raise Exception(
+                f"Request failed with status code: {response.status_code}\nreason: {response.reason}")
 
     def decode(self, short_url: str) -> str:
         short_code = short_url.rsplit('/', maxsplit=1)[1]
         response = requests.get(
-            bytes(f"{self.API_ENDPOINT}/info?code={short_code}", encoding='utf8'))
-        
+            bytes(
+                f"{self.API_ENDPOINT}/info?code={short_code}",
+                encoding='utf8'))
+
         if response.status_code == 200:
             return response.json()['result']['url']
-        
+
         else:
             return None

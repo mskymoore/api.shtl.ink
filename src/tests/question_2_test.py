@@ -31,7 +31,3 @@ def test_encode_decode() -> None:
         assert isinstance(a_url, str)
 
         assert a_url == urls[i]
-
-
-if __name__ == '__main__':
-    test_encode_decode()
