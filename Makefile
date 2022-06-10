@@ -10,3 +10,6 @@ lint-do:
 test:
 	python3 -m pytest --verbose --cov=src src/tests
 
+test-failed:
+	python3 -m pytest --lf --verbose --cov=src src/tests
+
