@@ -35,10 +35,10 @@ def db_session(function):
     """
     @db_session: Decorator which uses a context manager to supply the decorated function
         with a sqlalchemy.orm.Session object
-    create_session() Inner function of db_session decorator, checks kwargs for a Session and 
+    get_session() Inner function of db_session decorator, checks kwargs for a Session and 
         supplies it to the passed function object with a context manager if it's absent
     """
-    def create_session(*args, **kwargs):
+    def get_session(*args, **kwargs):
         if 'session' in kwargs and isinstance(kwargs['session'], Session):
             short_url = function(*args, **kwargs)
         else:
@@ -46,7 +46,7 @@ def db_session(function):
                 short_url = function(session=session, *args, **kwargs)
                 session.commit()
         return short_url
-    return create_session
+    return get_session
 
 
 class Codec:
@@ -60,8 +60,7 @@ class Codec:
         database for shortened url, returns original url or None
     """
 
-    def __init__(self, base_url: str):
-        self.base_url = base_url
+    def __init__(self):
         # no vowels, no visually ambiguous characters
         self.alphabet = '23456789bcdfghjkmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ'
         self.base = len(self.alphabet) - 1
@@ -103,7 +102,7 @@ class Codec:
             session.add(URLTable(long_url=long_url, short_url=""))
             url_record = session.query(URLTable)\
                 .filter(URLTable.long_url == long_url).first()
-            short_url = f"{self.base_url}{self.primary_key_encode(url_record.id, session)}"
+            short_url = self.primary_key_encode(url_record.id, session)
             setattr(url_record, 'short_url', short_url)
             return short_url
 
@@ -131,7 +130,7 @@ class Codec:
 
 if __name__ == "__main__":
 
-    codec = Codec("https://base.url/")
+    codec = Codec()
 
     with open("input_urls.txt", "r") as file:
         urls = file.read().splitlines()
