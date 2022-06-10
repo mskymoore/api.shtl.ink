@@ -3,7 +3,6 @@ Tests for question_1.py
 """
 
 import random
-
 from models import ShortURLModel, Base
 from question_1 import Codec
 from sqlalchemy.orm import Session
