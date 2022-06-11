@@ -1,4 +1,4 @@
-FROM python:3.9 as shtl_ink
+FROM python:3.9-slim as shtl_ink
 ENV PYTHONUNBUFFERED=1
 RUN mkdir -p /opt/url-api/shtl_ink/shtl_ink_api
 COPY shtl_ink/shtl_ink_api/* /opt/url-api/shtl_ink/shtl_ink_api/

@@ -26,7 +26,8 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3"
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10"
     ],
     description="Python URL Shortener",
     include_package_data=True,
@@ -52,7 +53,7 @@ setup(
     long_description=readme,
     name="shtl-ink-api",
     packages=find_packages(include=["shtl_ink_api"]),
-    url="https://github.com/mskymoore/coronavirus-plot",
-    version="0.0.3",
+    url="https://github.com/mskymoore/url_shortener",
+    version="0.0.4",
     zip_safe=True,
 )
