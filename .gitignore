@@ -6,3 +6,5 @@ __py*
 *journal*.db
 *.zip
 *.sqlite
+*.egg-info
+src/build

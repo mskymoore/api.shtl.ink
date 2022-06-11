@@ -12,7 +12,7 @@ def read(*parts):
         return fp.read()
 
 
-with open("../Readme.md") as readme_file:
+with open("../README.md") as readme_file:
     readme = readme_file.read()
 
 setup(
@@ -28,14 +28,26 @@ setup(
     ],
     description="Python URL Shortener",
     include_package_data=True,
-    install_requires=["requests>=2.22.0","matplotlib>=3.2.1","console-menu>=0.6.0"],
-    keywords=["covid", "covid-19", "covid19", "corona", "coronavirus",
-              "ncov19", "api", "async", "client"
+    install_requires=[
+        "autopep8==1.6.0",
+        "fastapi==0.78.0",
+        "jinja2==3.1.2",
+        "multipart==0.2.4",
+        "pytest==7.1.2",
+        "pytest-cov==3.0.0",
+        "python_multipart==0.0.5",
+        "requests==2.28.0",
+        "setuptools_rust==1.3.0",
+        "sqlalchemy==1.4",
+        "sqlalchemy_serializer==1.4.1",
+        "uvicorn[standard]==0.17.6",
+        "virtualenv==20.14.1"
     ],
+    keywords=["url", "url_shortener", "api"],
     license="MIT license",
     long_description_content_type="text/markdown",
     long_description=readme,
-    name="shtl_ink",
+    name="shtl-ink-api",
     packages=find_packages(include=["shtl_ink_api"]),
     url="https://github.com/mskymoore/coronavirus-plot",
     version="1.0.14",

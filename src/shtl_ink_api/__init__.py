@@ -1,0 +1,4 @@
+from pkg_resources import declare_namespace
+
+
+declare_namespace("shtl_ink_api")
