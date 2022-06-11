@@ -16,7 +16,6 @@ run-api:
 	uvicorn src.api.app:app --reload
 
 test:
-	if test -e [[ $(TEST_DB) ]];then rm $(TEST_DB);fi
     python3 -m pytest --verbose --cov-report term-missing --cov=src src/tests 
 
 test-failed:

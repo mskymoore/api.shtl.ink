@@ -1,7 +1,6 @@
 from fastapi import FastAPI, Depends, Request, Form, status
 
 from starlette.responses import RedirectResponse, JSONResponse, Response
-from starlette.templating import Jinja2Templates
 
 import json
 from sqlalchemy import select, delete
@@ -9,11 +8,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from src.models.short_url_model import ShortURLModel, Base
 from src.codec.codec import Codec
-from .database import SessionLocal, engine
+from .database import engine
 
 Base.metadata.create_all(bind=engine)
-
-templates = Jinja2Templates(directory="src/frontend/templates")
 codec = Codec()
 app = FastAPI()
 
