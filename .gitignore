@@ -5,3 +5,4 @@ __py*
 *cache*
 *journal*.db
 *.zip
+*.sqlite

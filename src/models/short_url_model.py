@@ -2,13 +2,12 @@
 models.py: models for url shortener
 """
 
-from sqlalchemy.orm import declarative_base
 from sqlalchemy import Column, String
+from sqlalchemy_serializer import SerializerMixin
+from src.api.database import Base
 
-Base = declarative_base()
 
-
-class ShortURLModel(Base):
+class ShortURLModel(Base, SerializerMixin):
     """
     ShortURLModel: Schema for database table with three columns, id(the primary key),
         url(the original url), and short_code, the shortened code keying the url

@@ -2,3 +2,4 @@ TODO:
 build api to use this with fastapi
 build front end with next.js
 deploy to vercel with github actions
+Logging

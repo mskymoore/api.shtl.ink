@@ -6,7 +6,7 @@ import random
 
 import pytest
 from models.short_url_model import ShortURLModel, Base
-from question_1.question_1 import Codec, db_session, db
+from codec.codec import Codec, db_session, db
 from sqlalchemy.orm import Session
 from sqlalchemy.engine import Engine
 from sqlalchemy import select

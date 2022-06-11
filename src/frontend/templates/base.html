@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Py URL Shortener</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/semantic-ui@2.4.2/dist/semantic.min.js"></script>
+</head>
+
+<body>
+    <div style="margin-top: 50px;" class="ui container">
+        <i class="us flag"></i>
+        <h1 class="ui center aligned header">Py URL Shortener</h1>
+
+        <form class="ui form" action="/add" method="post">
+            <div class="field">
+                <label>https://long.example.url -> https://shrt.url/abcdef</label>
+                <input type="text" name="url" placeholder="Enter URL..."><br>
+            </div>
+            <button class="ui blue button" type="submit">Add</button>
+        </form>
+
+        <hr>
+
+        {% for url in coded_urls %}
+        <div class="ui stackable celled grid container">
+              <div class="two column row">
+             <div class="column">
+            <p class="ui big header">{{ url.url }} | {{ url.short_code }}</p>
+            </div>
+            <div class="column">
+            <form class="ui action input form" action="/modify/{{ url.short_code }}" method="post">
+                <input type="text" name="new_short_code" placeholder="modify: {{ url.short_code }}">
+                 <button class="ui button">Modify</button>
+            </form>
+            </div>
+            </div>
+            <div class="row">
+            {% if url.url == "https://youtube.com" %}
+            <span class="ui gray label">Not Complete</span>
+            {% else %}
+            <span class="ui green label">Completed</span>
+            {% endif %}
+            <a class="ui red button" href="/delete/{{ url.short_code }}">Delete</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+
+</html>
