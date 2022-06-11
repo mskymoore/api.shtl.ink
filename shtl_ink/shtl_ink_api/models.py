@@ -15,7 +15,7 @@ class ShortURLModel(Base, SerializerMixin):
     """
     __tablename__ = 'short_code_to_url'
     # 2000 characters is defacto max url length
-    url = Column(String(2000), unique=True)
+    url = Column(String(2000), unique=False)
     short_code = Column(String(2000), primary_key=True)
 
     def __repr__(self):

@@ -1,8 +1,8 @@
+from urllib import response
 from fastapi import FastAPI, Depends, Request, Form, status
 
 from starlette.responses import RedirectResponse, JSONResponse, Response
 
-import json
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
@@ -15,7 +15,6 @@ codec = Codec()
 app = FastAPI()
 
 
-# Dependency
 def get_db():
     db = Session(engine)
     try:
@@ -23,6 +22,20 @@ def get_db():
     finally:
         db.close()
 
+def json_response_not_found(short_code):
+    return JSONResponse(
+        {"message": f"{short_code} not found"},
+        status_code=status.HTTP_404_NOT_FOUND)
+
+def json_response_in_use(short_code):
+    return JSONResponse(
+        {"message": f"{short_code} already in use"},
+        status_code=status.HTTP_409_CONFLICT)
+
+def json_response_created(url_record):
+    return JSONResponse(
+        url_record.to_dict(),
+        status_code=status.HTTP_201_CREATED)
 
 @app.get("/")
 def root(request: Request, db: Session = Depends(get_db)):
@@ -35,15 +48,15 @@ def go_to_url(
         request: Request,
         short_code: str,
         db: Session = Depends(get_db)):
+    
+    url_record = db.get(ShortURLModel, (short_code))
 
-    url = codec.decode(short_code, db)
-    if url is None:
-        return RedirectResponse(
-            url=app.url_path_for("root"),
-            status_code=status.HTTP_404_NOT_FOUND)
+    if url_record is None:
+        return json_response_not_found(short_code)
+
     else:
         return RedirectResponse(
-            url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+            url=url_record.url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
 @app.post("/create")
@@ -51,6 +64,7 @@ def create_url_short_code(
         request: Request,
         url: str = Form(...),
         db: Session = Depends(get_db)):
+        
     url_record = db.execute(
         select(ShortURLModel).where(
             ShortURLModel.url == url)).scalars().first()
@@ -64,13 +78,45 @@ def create_url_short_code(
 
     if isinstance(short_code, str):
         url_record = db.get(ShortURLModel, (short_code))
-        return JSONResponse(
-            url_record.to_dict(),
-            status_code=status.HTTP_201_CREATED)
+        return json_response_created(url_record)
+
     else:
         return JSONResponse(
-            json.dumps({"message": "something went wrong..."}),
+            {"message": "something went wrong..."},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@app.post("/create_custom")
+def create_custom_url_short_code(
+        request: Request,
+        url: str = Form(...),
+        short_code: str = Form(...),
+        db: Session = Depends(get_db)):
+
+    try:
+        url_record = ShortURLModel(url=url, short_code=short_code)
+        db.add(url_record)
+        db.commit()
+        return json_response_created(url_record)
+
+    except IntegrityError:
+        db.rollback()
+        return json_response_in_use(short_code)
+
+@app.get("/get/{short_code}")
+def get_short_code_url(
+        request: Request,
+        short_code: str,
+        db: Session = Depends(get_db)):
+
+    url_record = db.get(ShortURLModel, (short_code))
+
+    if url_record is None:
+        return json_response_not_found(short_code)
+
+    else:
+        return JSONResponse(
+            url_record.to_dict(),
+            status_code=status.HTTP_200_OK)
 
 
 @app.get("/delete/{short_code}")
@@ -78,14 +124,19 @@ def delete_url_short_code(
         request: Request,
         short_code: str,
         db: Session = Depends(get_db)):
+
+    url_record = db.get(ShortURLModel, (short_code))
+
+    if url_record is None:
+        return json_response_not_found(short_code)
     try:
-        db.execute(
-            delete(ShortURLModel).where(
-                ShortURLModel.short_code == short_code))
+        url = url_record.url
+        db.delete(url_record)
         db.commit()
-        return RedirectResponse(
-            url=app.url_path_for("root"),
+        return JSONResponse(
+            {"message":f"deleted record {short_code} -> {url}"},
             status_code=status.HTTP_200_OK)
+
     except Exception as e:
         db.rollback()
         print
@@ -100,20 +151,23 @@ def modify_url_short_code(
         short_code: str,
         new_short_code: str = Form(...),
         db: Session = Depends(get_db)):
+
     url_record = db.get(ShortURLModel, (short_code))
+    conflict_url_record = db.get(ShortURLModel, (new_short_code))
+
     if url_record is None:
-        return RedirectResponse(
-            url=app.url_path_for("root"),
-            status_code=status.HTTP_404_NOT_FOUND)
-    else:
-        try:
-            url_record.short_code = new_short_code
-            db.commit()
-            return JSONResponse(
-                url_record.to_dict(),
-                status_code=status.HTTP_202_ACCEPTED)
-        except IntegrityError:
-            db.rollback()
-            return RedirectResponse(
-                url=app.url_path_for("root"),
-                status_code=status.HTTP_226_IM_USED)
+        return json_response_not_found(short_code)
+
+    if conflict_url_record is not None:
+        return json_response_in_use(new_short_code)
+ 
+    try:
+        url_record.short_code = new_short_code
+        db.commit()
+        return JSONResponse(
+            url_record.to_dict(),
+            status_code=status.HTTP_202_ACCEPTED)
+
+    except IntegrityError:
+        db.rollback()
+        return json_response_in_use(new_short_code)

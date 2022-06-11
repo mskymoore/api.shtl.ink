@@ -6,7 +6,7 @@ build: install-dependencies test
 	python3 -m build
 
 docker-image:
-	docker build -t shtl_ink .
+	docker build -t shtl-ink-api .
 
 install-dependencies:
 	pip3 install -r requirements.txt
