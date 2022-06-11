@@ -35,7 +35,7 @@ jobs:
         labels: ${{ steps.meta.outputs.labels }}
 
     - name: Update Docker Repository Description
-      uses: peter-evans/dockerhub-description@v2
+      uses: peter-evans/dockerhub-description@v3
       env:
         DOCKERHUB_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKERHUB_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
