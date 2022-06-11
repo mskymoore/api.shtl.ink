@@ -33,9 +33,24 @@ def root(request: Request, db: Session = Depends(get_db)):
     return templates.TemplateResponse(
         "base.html", {"request": request, "coded_urls": coded_urls})
 
+@app.get("/{short_code}")
+def go_to_url(
+        request: Request,
+        short_code: str,
+        db: Session = Depends(get_db)):
 
-@app.post("/add")
-def add(request: Request, url: str = Form(...), db: Session = Depends(get_db)):
+    url = codec.decode(short_code, db)
+    if url is None:
+        return RedirectResponse(
+            url=app.url_path_for("root"),
+            status_code=status.HTTP_404_NOT_FOUND)
+    else:
+        return RedirectResponse(
+            url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+@app.post("/create")
+def create_url_short_code(request: Request, url: str = Form(...), db: Session = Depends(get_db)):
     url_record = db.execute(
         select(ShortURLModel).where(
             ShortURLModel.url == url)).scalars().first()
@@ -57,25 +72,8 @@ def add(request: Request, url: str = Form(...), db: Session = Depends(get_db)):
             json.dumps({"message": "something went wrong..."}),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-@app.get("/{short_code}")
-def go_to_url(
-        request: Request,
-        short_code: str,
-        db: Session = Depends(get_db)):
-
-    url = codec.decode(short_code, db)
-    if url is None:
-        return RedirectResponse(
-            url=app.url_path_for("root"),
-            status_code=status.HTTP_404_NOT_FOUND)
-    else:
-        return RedirectResponse(
-            url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
-
-
 @app.get("/delete/{short_code}")
-def url_delete(
+def delete_url_short_code(
         request: Request,
         short_code: str,
         db: Session = Depends(get_db)):
@@ -94,9 +92,8 @@ def url_delete(
             url=app.url_path_for("root"),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
 @app.post("/modify/{short_code}")
-def modify(
+def modify_url_short_code(
         request: Request,
         short_code: str,
         new_short_code: str = Form(...),
