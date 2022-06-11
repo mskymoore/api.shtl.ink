@@ -2,7 +2,7 @@
 tests for models.short_url_model
 """
 
-from models.short_url_model import ShortURLModel
+from ..shtl_ink_api.models import ShortURLModel
 """
 Creating an object and printing it calls repr, successful print will return None
 """

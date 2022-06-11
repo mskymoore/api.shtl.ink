@@ -6,8 +6,8 @@ import json
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from src.models.short_url_model import ShortURLModel, Base
-from src.codec.codec import Codec
+from .models import ShortURLModel, Base
+from .codec import Codec
 from .database import engine
 
 Base.metadata.create_all(bind=engine)

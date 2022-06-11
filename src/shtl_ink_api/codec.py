@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import random
-from src.models.short_url_model import ShortURLModel, Base
+from .models import ShortURLModel, Base
 from sqlalchemy import delete
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError

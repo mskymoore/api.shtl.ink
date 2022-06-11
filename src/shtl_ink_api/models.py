@@ -4,7 +4,7 @@ models.py: models for url shortener
 
 from sqlalchemy import Column, String
 from sqlalchemy_serializer import SerializerMixin
-from src.api.database import Base
+from .database import Base
 
 
 class ShortURLModel(Base, SerializerMixin):
