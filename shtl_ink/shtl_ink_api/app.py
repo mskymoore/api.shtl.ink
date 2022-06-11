@@ -22,20 +22,24 @@ def get_db():
     finally:
         db.close()
 
+
 def json_response_not_found(short_code):
     return JSONResponse(
         {"message": f"{short_code} not found"},
         status_code=status.HTTP_404_NOT_FOUND)
+
 
 def json_response_in_use(short_code):
     return JSONResponse(
         {"message": f"{short_code} already in use"},
         status_code=status.HTTP_409_CONFLICT)
 
+
 def json_response_created(url_record):
     return JSONResponse(
         url_record.to_dict(),
         status_code=status.HTTP_201_CREATED)
+
 
 @app.get("/")
 def root(request: Request, db: Session = Depends(get_db)):
@@ -48,7 +52,7 @@ def go_to_url(
         request: Request,
         short_code: str,
         db: Session = Depends(get_db)):
-    
+
     url_record = db.get(ShortURLModel, (short_code))
 
     if url_record is None:
@@ -64,7 +68,7 @@ def create_url_short_code(
         request: Request,
         url: str = Form(...),
         db: Session = Depends(get_db)):
-        
+
     url_record = db.execute(
         select(ShortURLModel).where(
             ShortURLModel.url == url)).scalars().first()
@@ -85,6 +89,7 @@ def create_url_short_code(
             {"message": "something went wrong..."},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @app.post("/create_custom")
 def create_custom_url_short_code(
         request: Request,
@@ -101,6 +106,7 @@ def create_custom_url_short_code(
     except IntegrityError:
         db.rollback()
         return json_response_in_use(short_code)
+
 
 @app.get("/get/{short_code}")
 def get_short_code_url(
@@ -134,7 +140,7 @@ def delete_url_short_code(
         db.delete(url_record)
         db.commit()
         return JSONResponse(
-            {"message":f"deleted record {short_code} -> {url}"},
+            {"message": f"deleted record {short_code} -> {url}"},
             status_code=status.HTTP_200_OK)
 
     except Exception as e:
@@ -160,7 +166,7 @@ def modify_url_short_code(
 
     if conflict_url_record is not None:
         return json_response_in_use(new_short_code)
- 
+
     try:
         url_record.short_code = new_short_code
         db.commit()
