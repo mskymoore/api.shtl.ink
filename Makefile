@@ -1,8 +1,8 @@
 .PHONY: docker-image install-dependencies lint-diff lint-in-place test test-failed
 
-default: docker-image
+default: build
 
-build: install-dependencies test
+build: install-dependencies
 	python3 -m build
 
 docker-image:

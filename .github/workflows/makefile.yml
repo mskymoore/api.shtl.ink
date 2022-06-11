@@ -11,9 +11,6 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
-    
-    - name: Install Dependencies
-      run: make install-dependencies
-      
-    - name: Test
-      run: make test
+
+    - name: Test Package
+      run: make 

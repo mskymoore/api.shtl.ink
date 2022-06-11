@@ -40,11 +40,21 @@ def json_response_created(url_record):
         url_record.to_dict(),
         status_code=status.HTTP_201_CREATED)
 
+# all reserved endings that have no form data need to be before
+# short code redirect reciever
 
 @app.get("/")
-def root(request: Request, db: Session = Depends(get_db)):
-    coded_urls = db.execute(select(ShortURLModel)).scalars().all()
-    return Response()
+def root(request: Request):
+    return RedirectResponse(
+        url="https://shtl.ink",
+        status_code=status.HTTP_308_PERMANENT_REDIRECT)
+
+
+@app.get("/all")
+def get_all_records(request: Request, db: Session = Depends(get_db)):
+    url_records = db.execute(select(ShortURLModel)).scalars().all()
+    url_records = [url_record.to_dict() for url_record in url_records]
+    return JSONResponse(url_records)
 
 
 @app.get("/{short_code}")
@@ -62,6 +72,7 @@ def go_to_url(
         return RedirectResponse(
             url=url_record.url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
+# all endpoints with form data
 
 @app.post("/create")
 def create_url_short_code(
@@ -97,6 +108,13 @@ def create_custom_url_short_code(
         short_code: str = Form(...),
         db: Session = Depends(get_db)):
 
+    url_record = db.get(ShortURLModel, (short_code))
+
+    if url_record is not None and url_record.url == url:
+        return JSONResponse(
+            url_record.to_dict(),
+            status_code=status.HTTP_200_OK)
+
     try:
         url_record = ShortURLModel(url=url, short_code=short_code)
         db.add(url_record)
@@ -108,10 +126,10 @@ def create_custom_url_short_code(
         return json_response_in_use(short_code)
 
 
-@app.get("/get/{short_code}")
+@app.get("/get")
 def get_short_code_url(
         request: Request,
-        short_code: str,
+        short_code: str = Form(...),
         db: Session = Depends(get_db)):
 
     url_record = db.get(ShortURLModel, (short_code))
@@ -125,10 +143,10 @@ def get_short_code_url(
             status_code=status.HTTP_200_OK)
 
 
-@app.get("/delete/{short_code}")
+@app.get("/delete")
 def delete_url_short_code(
         request: Request,
-        short_code: str,
+        short_code: str = Form(...),
         db: Session = Depends(get_db)):
 
     url_record = db.get(ShortURLModel, (short_code))
@@ -151,10 +169,10 @@ def delete_url_short_code(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@app.post("/modify/{short_code}")
+@app.post("/modify")
 def modify_url_short_code(
         request: Request,
-        short_code: str,
+        short_code: str = Form(...),
         new_short_code: str = Form(...),
         db: Session = Depends(get_db)):
 
