@@ -1,3 +1,6 @@
+docker-image:
+	docker build -t shtl_ink .
+
 install-dependencies:
 	pip3 install -r requirements.txt
 

@@ -6,8 +6,8 @@ import random
 
 from requests import session
 
-from ..shtl_ink_api.models import ShortURLModel, Base
-from ..shtl_ink_api.codec import Codec
+from shtl_ink_api.models import ShortURLModel, Base
+from shtl_ink_api.codec import Codec
 from sqlalchemy.orm import Session
 from sqlalchemy import select, create_engine
 from typing import List
