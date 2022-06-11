@@ -126,7 +126,7 @@ def create_custom_url_short_code(
         return json_response_in_use(short_code)
 
 
-@app.get("/get")
+@app.post("/get")
 def get_short_code_url(
         request: Request,
         short_code: str = Form(...),
@@ -143,7 +143,7 @@ def get_short_code_url(
             status_code=status.HTTP_200_OK)
 
 
-@app.get("/delete")
+@app.post("/delete")
 def delete_url_short_code(
         request: Request,
         short_code: str = Form(...),
