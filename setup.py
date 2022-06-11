@@ -53,6 +53,6 @@ setup(
     name="shtl-ink-api",
     packages=find_packages(include=["shtl_ink_api"]),
     url="https://github.com/mskymoore/coronavirus-plot",
-    version="1.0.14",
+    version="0.0.3",
     zip_safe=True,
 )
