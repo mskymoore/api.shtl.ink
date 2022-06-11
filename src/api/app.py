@@ -28,7 +28,7 @@ def get_db():
 
 
 @app.get("/")
-def home(request: Request, db: Session = Depends(get_db)):
+def root(request: Request, db: Session = Depends(get_db)):
     coded_urls = db.execute(select(ShortURLModel)).scalars().all()
     return templates.TemplateResponse(
         "base.html", {"request": request, "coded_urls": coded_urls})
@@ -53,8 +53,8 @@ def add(request: Request, url: str = Form(...), db: Session = Depends(get_db)):
             url_record.to_dict(),
             status_code=status.HTTP_201_CREATED)
     else:
-        return RedirectResponse(
-            url=app.url_path_for("home"),
+        return JSONResponse(
+            json.dumps({"message": "something went wrong..."}),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -67,7 +67,7 @@ def go_to_url(
     url = codec.decode(short_code, db)
     if url is None:
         return RedirectResponse(
-            url=app.url_path_for("home"),
+            url=app.url_path_for("root"),
             status_code=status.HTTP_404_NOT_FOUND)
     else:
         return RedirectResponse(
@@ -85,13 +85,13 @@ def url_delete(
                 ShortURLModel.short_code == short_code))
         db.commit()
         return RedirectResponse(
-            url=app.url_path_for("home"),
+            url=app.url_path_for("root"),
             status_code=status.HTTP_200_OK)
     except Exception as e:
         db.rollback()
         print
         return RedirectResponse(
-            url=app.url_path_for("home"),
+            url=app.url_path_for("root"),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -104,7 +104,7 @@ def modify(
     url_record = db.get(ShortURLModel, (short_code))
     if url_record is None:
         return RedirectResponse(
-            url=app.url_path_for("home"),
+            url=app.url_path_for("root"),
             status_code=status.HTTP_404_NOT_FOUND)
     else:
         try:
@@ -116,5 +116,5 @@ def modify(
         except IntegrityError:
             db.rollback()
             return RedirectResponse(
-                url=app.url_path_for("home"),
+                url=app.url_path_for("root"),
                 status_code=status.HTTP_226_IM_USED)
