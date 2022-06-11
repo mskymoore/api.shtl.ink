@@ -18,7 +18,7 @@ python -m build
 
 ```console
 pip install shtl-ink-api
-uvicorn shtl_ink.shtl_ink_api.app:app
+uvicorn shtl_ink_api.app:app
 ```
 
 ## Build Docker
