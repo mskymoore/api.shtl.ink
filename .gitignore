@@ -1,6 +1,6 @@
 __py*
 *.db
-.vscode
+*.log
 .coverage
 *cache*
 *journal*.db
