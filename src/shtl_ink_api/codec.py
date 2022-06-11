@@ -32,8 +32,7 @@ class Codec:
             self,
             url: str,
             multiplier: int,
-            session: Session,
-            first_short_code: str = '') -> str:
+            session: Session) -> str:
         shift_bits = self.shift_bits
         short_code = ''
         # The number of available urls in this config is 13,983,816 by nCk(nChoosek)
@@ -49,15 +48,6 @@ class Codec:
             short_code += self.alphabet[(key >> shift_bits) & self.base]
             shift_bits -= 2
 
-        if first_short_code == short_code:
-            short_code = self.url_encode(
-                url,
-                multiplier +
-                random.choice(
-                    self.shifts),
-                session, first_short_code=short_code)
-            return short_code
-
         try:
             session.add(ShortURLModel(
                 url=url, short_code=short_code))
@@ -68,27 +58,15 @@ class Codec:
         except IntegrityError:
             session.rollback()
 
-            # collision on short_code
-            if session.get(ShortURLModel, (short_code)) is None:
-                short_code = self.url_encode(
-                    url,
-                    multiplier +
-                    random.choice(
-                        self.shifts),
-                    session)
-                return short_code
-
-            # collision on url
-            else:
-                session.execute(delete(ShortURLModel).where(
-                    ShortURLModel.url == url))
-                short_code = self.url_encode(
-                    url,
-                    multiplier +
-                    random.choice(
-                        self.shifts),
-                    session, first_short_code=short_code)
-                return short_code
+            session.execute(delete(ShortURLModel).where(
+                ShortURLModel.url == url))
+            short_code = self.url_encode(
+                url,
+                multiplier +
+                random.choice(
+                    self.shifts),
+                session)
+            return short_code
 
     def encode(self, url: str, session: Session) -> str:
 

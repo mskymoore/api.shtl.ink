@@ -97,7 +97,7 @@ def test_update_url(sql_session, a_codec) -> None:
         a_url_short_code = sql_session.execute(select(ShortURLModel).where(
             ShortURLModel.url == urls[i])).scalars().first().short_code
 
-        assert isinstance(a_codec.encode(urls[i]), str)
+        assert isinstance(a_codec.encode(urls[i], sql_session), str)
 
         b_url_short_code = sql_session.execute(select(ShortURLModel).where(
             ShortURLModel.url == urls[i])).scalars().first().short_code
@@ -120,4 +120,4 @@ def test_decode(sql_session, a_codec) -> None:
         a_url = sql_session.execute(select(ShortURLModel).where(
             ShortURLModel.url == urls[i])).scalars().first()
 
-        assert a_codec.decode(a_url.short_code) == a_url.url
+        assert a_codec.decode(a_url.short_code, sql_session) == a_url.url
