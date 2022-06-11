@@ -12,19 +12,19 @@ pip install -r requirements.txt
 python -m build
 ```
 
-## Build Docker
-```console
-docker build -t skymoore/shtl-ink-api .
-```
-
-## Run, Python3
+## Run Local
 
 ```console
 pip install shtl-ink-api
 uvicorn shtl_ink.shtl_ink_api.app:app
 ```
 
-## Run, Docker
+## Build Docker
+```console
+docker build -t skymoore/shtl-ink-api .
+```
+
+## Run Docker
 
 ```console
 docker pull skymoore/shtl-ink-api
