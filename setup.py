@@ -14,7 +14,7 @@ def read(*parts):
         return fp.read()
 
 
-with open("../README.md") as readme_file:
+with open("./README.md") as readme_file:
     readme = readme_file.read()
 
 setup(
@@ -32,6 +32,7 @@ setup(
     include_package_data=True,
     install_requires=[
         "autopep8==1.6.0",
+        "build==0.8.0",
         "fastapi==0.78.0",
         "jinja2==3.1.2",
         "multipart==0.2.4",

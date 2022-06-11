@@ -1,6 +1,6 @@
 {
     "python.testing.pytestArgs": [
-        "src/tests"
+        "shtk_ink/tests"
     ],
     "python.testing.unittestEnabled": true,
     "python.testing.pytestEnabled": true

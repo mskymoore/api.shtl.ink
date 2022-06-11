@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "module": "uvicorn",
-            "cwd": "${workspaceFolder}/src",
+            "cwd": "${workspaceFolder}/shtl_ink",
             "args": ["shtl_ink_api.app:app", "--reload"],
             "envFile": "${workspaceFolder}/.env",
             "justMyCode": true
