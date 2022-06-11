@@ -1,6 +1,8 @@
 # shtl.ink api
 **URL Shortener built with Python and FastAPI**
 
+[github repository](https://github.com/mskymoore/url_shortener)
+
 ## Read API Docs
 
 1. Run App
