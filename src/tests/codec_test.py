@@ -13,7 +13,7 @@ from sqlalchemy import select, create_engine
 from typing import List
 from pytest import fixture, raises
 
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db.sqlite"
+SQLALCHEMY_DATABASE_URL = "sqlite:///./datatest.db.sqlite"
 # SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
 
 engine = create_engine(
