@@ -24,7 +24,7 @@ jobs:
       uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
       with:
         images: ${{ secrets.DOCKER_USERNAME }}/shtl-ink-api
-        tags: ${{ secrets.DOCKER_USERNAME }}/shtl-ink-api:${{ github.event.release.name }},${{ secrets.DOCKER_USERNAME }}/shtl-ink-api:latest
+        tags: ${{ github.event.release.name }},latest
     
     - name: Build and Push Docker image
       uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
