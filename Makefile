@@ -1,4 +1,9 @@
-ZIP_FILE=mineralWearEval.zip
+.PHONY: docker-image install-dependencies lint-diff lint-in-place test test-failed
+
+default: docker-image
+
+docker-image:
+	docker build -t shtl_ink .
 
 install-dependencies:
 	pip3 install -r requirements.txt
@@ -6,17 +11,11 @@ install-dependencies:
 lint-diff:
 	python3 -m autopep8 --recursive --aggressive --aggressive --diff .
 
-lint-do:
+lint-in-place:
 	python3 -m autopep8 --recursive --aggressive --aggressive --in-place .
 
 test:
-	python3 -m pytest --verbose --cov-report term-missing --cov=src src/tests 
+    python3 -m pytest --verbose --cov-report term-missing --cov=shtl_ink_api src/tests 
 
 test-failed:
 	python3 -m pytest --lf --verbose --cov=src src/tests
-
-zip:
-	if test -e [[ $(ZIP_FILE) ]];then rm $(ZIP_FILE);fi
-
-	rm -rf __pycache__ src/__pycache__ src/question_1/__pycache__ src/question_2/__pycache__ src/models/__pycache__ src/tests/__pycache__
-	zip -r mineralWearEval  * -x *.db .*

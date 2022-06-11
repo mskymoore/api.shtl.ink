@@ -1,7 +1,10 @@
 __py*
 *.db
-.vscode
+*.log
 .coverage
 *cache*
 *journal*.db
 *.zip
+*.sqlite
+*.egg-info
+src/build
