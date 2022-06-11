@@ -36,13 +36,16 @@ def home(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/add")
 def add(request: Request, url: str = Form(...), db: Session = Depends(get_db)):
-    url_record = db.execute(select(ShortURLModel).where(ShortURLModel.url == url)).scalars().first()
-    
+    url_record = db.execute(
+        select(ShortURLModel).where(
+            ShortURLModel.url == url)).scalars().first()
+
     if url_record is None:
         short_code = codec.encode(url, db)
 
     else:
-        return JSONResponse(url_record.to_dict(), status_code=status.HTTP_208_ALREADY_REPORTED)
+        return JSONResponse(url_record.to_dict(),
+                            status_code=status.HTTP_208_ALREADY_REPORTED)
 
     if isinstance(short_code, str):
         url_record = db.get(ShortURLModel, (short_code))
@@ -67,7 +70,8 @@ def go_to_url(
             url=app.url_path_for("home"),
             status_code=status.HTTP_404_NOT_FOUND)
     else:
-        return RedirectResponse(url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+        return RedirectResponse(
+            url=url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
 
 
 @app.get("/delete/{short_code}")
@@ -76,7 +80,9 @@ def url_delete(
         short_code: str,
         db: Session = Depends(get_db)):
     try:
-        db.execute(delete(ShortURLModel).where(ShortURLModel.short_code == short_code))
+        db.execute(
+            delete(ShortURLModel).where(
+                ShortURLModel.short_code == short_code))
         db.commit()
         return RedirectResponse(
             url=app.url_path_for("home"),
@@ -88,16 +94,27 @@ def url_delete(
             url=app.url_path_for("home"),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @app.post("/modify/{short_code}")
-def modify(request: Request, short_code: str, new_short_code: str = Form(...), db: Session = Depends(get_db)):
+def modify(
+        request: Request,
+        short_code: str,
+        new_short_code: str = Form(...),
+        db: Session = Depends(get_db)):
     url_record = db.get(ShortURLModel, (short_code))
     if url_record is None:
-        return RedirectResponse(url=app.url_path_for("home"), status_code=status.HTTP_404_NOT_FOUND)
+        return RedirectResponse(
+            url=app.url_path_for("home"),
+            status_code=status.HTTP_404_NOT_FOUND)
     else:
         try:
             url_record.short_code = new_short_code
             db.commit()
-            return JSONResponse(url_record.to_dict(), status_code=status.HTTP_202_ACCEPTED)
+            return JSONResponse(
+                url_record.to_dict(),
+                status_code=status.HTTP_202_ACCEPTED)
         except IntegrityError:
             db.rollback()
-            return RedirectResponse(url=app.url_path_for("home"), status_code=status.HTTP_226_IM_USED)
+            return RedirectResponse(
+                url=app.url_path_for("home"),
+                status_code=status.HTTP_226_IM_USED)
