@@ -36,10 +36,18 @@ def home(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/add")
 def add(request: Request, url: str = Form(...), db: Session = Depends(get_db)):
+    url_record = db.execute(select(ShortURLModel).where(ShortURLModel.url == url)).scalars().first()
+    
+    if url_record is None:
+        short_code = codec.encode(url, db)
 
-    if isinstance(codec.encode(url, db), str):
-        return RedirectResponse(
-            url=app.url_path_for("home"),
+    else:
+        return JSONResponse(url_record.to_dict(), status_code=status.HTTP_208_ALREADY_REPORTED)
+
+    if isinstance(short_code, str):
+        url_record = db.get(ShortURLModel, (short_code))
+        return JSONResponse(
+            url_record.to_dict(),
             status_code=status.HTTP_201_CREATED)
     else:
         return RedirectResponse(
