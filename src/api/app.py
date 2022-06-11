@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, Request, Form, status
 
-from starlette.responses import RedirectResponse, JSONResponse
+from starlette.responses import RedirectResponse, JSONResponse, Response
 from starlette.templating import Jinja2Templates
 
 import json
@@ -30,8 +30,8 @@ def get_db():
 @app.get("/")
 def root(request: Request, db: Session = Depends(get_db)):
     coded_urls = db.execute(select(ShortURLModel)).scalars().all()
-    return templates.TemplateResponse(
-        "base.html", {"request": request, "coded_urls": coded_urls})
+    return Response()
+
 
 @app.get("/{short_code}")
 def go_to_url(
@@ -50,7 +50,10 @@ def go_to_url(
 
 
 @app.post("/create")
-def create_url_short_code(request: Request, url: str = Form(...), db: Session = Depends(get_db)):
+def create_url_short_code(
+        request: Request,
+        url: str = Form(...),
+        db: Session = Depends(get_db)):
     url_record = db.execute(
         select(ShortURLModel).where(
             ShortURLModel.url == url)).scalars().first()
@@ -72,6 +75,7 @@ def create_url_short_code(request: Request, url: str = Form(...), db: Session = 
             json.dumps({"message": "something went wrong..."}),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
 @app.get("/delete/{short_code}")
 def delete_url_short_code(
         request: Request,
@@ -91,6 +95,7 @@ def delete_url_short_code(
         return RedirectResponse(
             url=app.url_path_for("root"),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @app.post("/modify/{short_code}")
 def modify_url_short_code(
