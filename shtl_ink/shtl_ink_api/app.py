@@ -70,7 +70,7 @@ async def root(request: Request):
         status_code=status.HTTP_308_PERMANENT_REDIRECT)
 
 
-@app.get("/all")
+@app.get("/all_short_codes")
 async def get_all_records(db: Session = Depends(get_db)):
     url_records = db.execute(select(ShortURLModel)).scalars().all()
     url_records = [url_record.to_dict() for url_record in url_records]
@@ -94,8 +94,8 @@ async def go_to_url(
 # all endpoints with form data
 
 
-@app.post("/create")
-async def create_url_short_code(
+@app.post("/create_short_code")
+async def create_short_code(
         create_request: CreateRequest,
         db: Session = Depends(get_db)):
 
@@ -120,8 +120,8 @@ async def create_url_short_code(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@app.post("/create_custom")
-async def create_custom_url_short_code(
+@app.post("/create_custom_short_code")
+async def create_custom_short_code(
         create_custom_request: CreateCustomRequest,
         db: Session = Depends(get_db)):
 
@@ -145,7 +145,22 @@ async def create_custom_url_short_code(
         return json_response_in_use(create_custom_request.short_code)
 
 
-@app.get("/get/{short_code}")
+@app.post("/short_code")
+async def Get_short_code_url(
+        url_request: UrlRequest,
+        db: Session = Depends(get_db)):
+    url_record = db.get(ShortURLModel, (url_request.short_code))
+
+    if url_record is None:
+        return json_response_not_found(url_request.short_code)
+
+    else:
+        return JSONResponse(
+            url_record.to_dict(),
+            status_code=status.HTTP_200_OK)
+
+
+@app.get("/short_code/{short_code}")
 async def get_short_code_url(
         short_code: str,
         db: Session = Depends(get_db)):
@@ -160,22 +175,32 @@ async def get_short_code_url(
             status_code=status.HTTP_200_OK)
 
 
-@app.post("/get")
-async def get_short_code_url(
+@app.delete("/delete_short_code")
+async def Delete_url_short_code(
         url_request: UrlRequest,
         db: Session = Depends(get_db)):
+
     url_record = db.get(ShortURLModel, (url_request.short_code))
 
     if url_record is None:
         return json_response_not_found(url_request.short_code)
-
-    else:
+    try:
+        url = url_record.url
+        db.delete(url_record)
+        db.commit()
         return JSONResponse(
-            url_record.to_dict(),
+            {"message": f"deleted record {url_request.short_code} -> {url}"},
             status_code=status.HTTP_200_OK)
 
+    except Exception as e:
+        db.rollback()
+        print
+        return RedirectResponse(
+            url=app.url_path_for("root"),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-@app.get("/delete/{short_code}")
+
+@app.delete("/delete_short_code/{short_code}")
 async def delete_url_short_code(
         short_code: str,
         db: Session = Depends(get_db)):
@@ -200,32 +225,8 @@ async def delete_url_short_code(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@app.post("/delete")
-async def delete_url_short_code(
-        url_request: UrlRequest,
-        db: Session = Depends(get_db)):
 
-    url_record = db.get(ShortURLModel, (url_request.short_code))
-
-    if url_record is None:
-        return json_response_not_found(url_request.short_code)
-    try:
-        url = url_record.url
-        db.delete(url_record)
-        db.commit()
-        return JSONResponse(
-            {"message": f"deleted record {url_request.short_code} -> {url}"},
-            status_code=status.HTTP_200_OK)
-
-    except Exception as e:
-        db.rollback()
-        print
-        return RedirectResponse(
-            url=app.url_path_for("root"),
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@app.post("/modify")
+@app.post("/modify_short_code")
 async def modify_url_short_code(
         mod_request: ModificiationRequest,
         db: Session = Depends(get_db)):
