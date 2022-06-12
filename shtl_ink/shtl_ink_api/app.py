@@ -6,6 +6,7 @@ from starlette.responses import RedirectResponse, JSONResponse, Response
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from pydantic import BaseModel
 from .models import ShortURLModel, Base
 from .codec import Codec
 from .database import engine
@@ -13,6 +14,21 @@ from .database import engine
 Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
+
+
+class ModificiationRequest(BaseModel):
+    short_code: str
+    new_short_code: str
+
+class CreateRequest(BaseModel):
+    url: str
+
+class CreateCustomRequest(BaseModel):
+    short_code: str
+    url: str
+
+class UrlRequest(BaseModel):
+    short_code: str
 
 
 def get_db():
@@ -44,22 +60,21 @@ def json_response_created(url_record):
 # short code redirect reciever
 
 @app.get("/")
-def root(request: Request):
+async def root(request: Request):
     return RedirectResponse(
         url="https://shtl.ink",
         status_code=status.HTTP_308_PERMANENT_REDIRECT)
 
 
 @app.get("/all")
-def get_all_records(request: Request, db: Session = Depends(get_db)):
+async def get_all_records(db: Session = Depends(get_db)):
     url_records = db.execute(select(ShortURLModel)).scalars().all()
     url_records = [url_record.to_dict() for url_record in url_records]
     return JSONResponse(url_records)
 
 
 @app.get("/{short_code}")
-def go_to_url(
-        request: Request,
+async def go_to_url(
         short_code: str,
         db: Session = Depends(get_db)):
 
@@ -75,17 +90,16 @@ def go_to_url(
 # all endpoints with form data
 
 @app.post("/create")
-def create_url_short_code(
-        request: Request,
-        url: str = Form(...),
+async def create_url_short_code(
+        create_request: CreateRequest,
         db: Session = Depends(get_db)):
 
     url_record = db.execute(
         select(ShortURLModel).where(
-            ShortURLModel.url == url)).scalars().first()
+            ShortURLModel.url == create_request.url)).scalars().first()
 
     if url_record is None:
-        short_code = codec.encode(url, db)
+        short_code = codec.encode(create_request.url, db)
 
     else:
         return JSONResponse(url_record.to_dict(),
@@ -102,40 +116,36 @@ def create_url_short_code(
 
 
 @app.post("/create_custom")
-def create_custom_url_short_code(
-        request: Request,
-        url: str = Form(...),
-        short_code: str = Form(...),
+async def create_custom_url_short_code(
+        create_custom_request: CreateCustomRequest,
         db: Session = Depends(get_db)):
 
-    url_record = db.get(ShortURLModel, (short_code))
+    url_record = db.get(ShortURLModel, (create_custom_request.short_code))
 
-    if url_record is not None and url_record.url == url:
+    if url_record is not None and url_record.url == create_custom_request.url:
         return JSONResponse(
             url_record.to_dict(),
             status_code=status.HTTP_200_OK)
 
     try:
-        url_record = ShortURLModel(url=url, short_code=short_code)
+        url_record = ShortURLModel(url=create_custom_request.url, short_code=create_custom_request.short_code)
         db.add(url_record)
         db.commit()
         return json_response_created(url_record)
 
     except IntegrityError:
         db.rollback()
-        return json_response_in_use(short_code)
+        return json_response_in_use(create_custom_request.short_code)
 
 
 @app.post("/get")
-def get_short_code_url(
-        request: Request,
-        short_code: str = Form(...),
+async def get_short_code_url(request: Request,
+        url_request: UrlRequest,
         db: Session = Depends(get_db)):
-
-    url_record = db.get(ShortURLModel, (short_code))
+    url_record = db.get(ShortURLModel, (url_request.short_code))
 
     if url_record is None:
-        return json_response_not_found(short_code)
+        return json_response_not_found(url_request.short_code)
 
     else:
         return JSONResponse(
@@ -144,21 +154,20 @@ def get_short_code_url(
 
 
 @app.post("/delete")
-def delete_url_short_code(
-        request: Request,
-        short_code: str = Form(...),
+async def delete_url_short_code(
+        url_request: UrlRequest,
         db: Session = Depends(get_db)):
 
-    url_record = db.get(ShortURLModel, (short_code))
+    url_record = db.get(ShortURLModel, (url_request.short_code))
 
     if url_record is None:
-        return json_response_not_found(short_code)
+        return json_response_not_found(url_request.short_code)
     try:
         url = url_record.url
         db.delete(url_record)
         db.commit()
         return JSONResponse(
-            {"message": f"deleted record {short_code} -> {url}"},
+            {"message": f"deleted record {url_request.short_code} -> {url}"},
             status_code=status.HTTP_200_OK)
 
     except Exception as e:
@@ -170,23 +179,21 @@ def delete_url_short_code(
 
 
 @app.post("/modify")
-def modify_url_short_code(
-        request: Request,
-        short_code: str = Form(...),
-        new_short_code: str = Form(...),
+async def modify_url_short_code(
+        mod_request: ModificiationRequest,
         db: Session = Depends(get_db)):
 
-    url_record = db.get(ShortURLModel, (short_code))
-    conflict_url_record = db.get(ShortURLModel, (new_short_code))
+    url_record = db.get(ShortURLModel, (mod_request.short_code))
+    conflict_url_record = db.get(ShortURLModel, (mod_request.new_short_code))
 
     if url_record is None:
-        return json_response_not_found(short_code)
+        return json_response_not_found(mod_request.short_code)
 
     if conflict_url_record is not None:
-        return json_response_in_use(new_short_code)
+        return json_response_in_use(mod_request.new_short_code)
 
     try:
-        url_record.short_code = new_short_code
+        url_record.short_code = mod_request.new_short_code
         db.commit()
         return JSONResponse(
             url_record.to_dict(),
@@ -194,4 +201,4 @@ def modify_url_short_code(
 
     except IntegrityError:
         db.rollback()
-        return json_response_in_use(new_short_code)
+        return json_response_in_use(mod_request.new_short_code)
