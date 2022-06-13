@@ -1,6 +1,6 @@
 from urllib import response
 from fastapi import FastAPI, Depends, Request, Form, status
-
+from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse, JSONResponse, Response
 
 from sqlalchemy import select, delete
@@ -14,6 +14,14 @@ from .database import engine
 Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class ModificiationRequest(BaseModel):
@@ -223,7 +231,6 @@ async def delete_url_short_code(
         return RedirectResponse(
             url=app.url_path_for("root"),
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 @app.post("/modify_short_code")
