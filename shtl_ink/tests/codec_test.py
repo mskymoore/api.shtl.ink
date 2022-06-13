@@ -83,30 +83,6 @@ def test_load_database_encode_decode(a_codec, sql_session) -> None:
         assert url == decoded
 
 
-def test_update_url(sql_session, a_codec) -> None:
-    """
-    Encoding urls that are known to be present should update the short code.
-    """
-    urls = test_get_test_urls()
-    index = range(0, len(urls))
-
-    # select 333 random urls and test the update
-    for _ in range(333):
-        i = random.choice(index)
-
-        a_url_short_code = sql_session.execute(select(ShortURLModel).where(
-            ShortURLModel.url == urls[i])).scalars().first().short_code
-
-        assert isinstance(a_codec.encode(urls[i], sql_session), str)
-
-        b_url_short_code = sql_session.execute(select(ShortURLModel).where(
-            ShortURLModel.url == urls[i])).scalars().first().short_code
-
-        assert isinstance(b_url_short_code, str)
-
-        assert a_url_short_code != b_url_short_code
-
-
 def test_decode(sql_session, a_codec) -> None:
     """
     test that decoding an short code gives the correct url
