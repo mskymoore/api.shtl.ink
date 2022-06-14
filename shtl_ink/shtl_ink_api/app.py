@@ -108,6 +108,10 @@ async def create_short_code(
         create_request: CreateRequest,
         db: Session = Depends(get_db)):
 
+    if create_request.url == '':
+        return JSONResponse({"message": "you must supply a url"},
+                            status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
     url_record = db.execute(
         select(ShortURLModel).where(
             ShortURLModel.url == create_request.url)).scalars().first()
@@ -134,6 +138,10 @@ async def create_custom_short_code(
         create_custom_request: CreateCustomRequest,
         db: Session = Depends(get_db)):
 
+    if create_custom_request.short_code == '' or create_custom_request.url == '':
+        return JSONResponse({"message": "you must supply a url and short code"},
+                            status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
     url_record = db.get(ShortURLModel, (create_custom_request.short_code))
 
     if url_record is not None and url_record.url == create_custom_request.url:
@@ -158,6 +166,11 @@ async def create_custom_short_code(
 async def Get_short_code_url(
         url_request: UrlRequest,
         db: Session = Depends(get_db)):
+
+    if url_request.short_code == '':
+        return JSONResponse({"message": "you must supply a short code"},
+                            status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
     url_record = db.get(ShortURLModel, (url_request.short_code))
 
     if url_record is None:
@@ -188,6 +201,10 @@ async def get_short_code_url(
 async def Delete_url_short_code(
         url_request: UrlRequest,
         db: Session = Depends(get_db)):
+
+    if url_request.short_code == '':
+        return JSONResponse({"message": "you must supply a short code"},
+                            status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     url_record = db.get(ShortURLModel, (url_request.short_code))
 
@@ -238,6 +255,12 @@ async def delete_url_short_code(
 async def modify_url_short_code(
         mod_request: ModificiationRequest,
         db: Session = Depends(get_db)):
+
+    if mod_request.short_code == '' or mod_request.new_short_code == '':
+        return JSONResponse(
+            {
+                "message": "you must supply a short code and a new short code"},
+            status_code=status.HTTP_406_NOT_ACCEPTABLE)
 
     url_record = db.get(ShortURLModel, (mod_request.short_code))
     conflict_url_record = db.get(ShortURLModel, (mod_request.new_short_code))
