@@ -37,7 +37,7 @@ setup(
         "fastapi==0.78.0",
         "jinja2==3.1.2",
         "multipart==0.2.4",
-        "psycopg2==2.9.3",
+        "psycopg2-binary==2.9.3",
         "pytest==7.1.2",
         "pytest-cov==3.0.0",
         "python_multipart==0.0.5",
@@ -55,6 +55,6 @@ setup(
     name="shtl-ink-api",
     packages=find_packages(include=["shtl_ink_api"]),
     url="https://github.com/mskymoore/url_shortener",
-    version="0.0.17",
+    version="0.0.18",
     zip_safe=True,
 )
