@@ -12,11 +12,14 @@ services:
       POSTGRES_DB: shtlink
     volumes:
       - "apishtlink_db:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD", "pg_isready"]
 
   api:
     image: skymoore/shtl-ink-api:latest
     depends_on:
-      - "db"
+      db:
+        condition: service_healthy
     environment:
       BASE_URL: http://api:8000
       ROOT_REDIRECT_URL: http://localhost:3000
