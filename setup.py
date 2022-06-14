@@ -54,6 +54,6 @@ setup(
     name="shtl-ink-api",
     packages=find_packages(include=["shtl_ink_api"]),
     url="https://github.com/mskymoore/url_shortener",
-    version="0.0.15",
+    version="0.0.16",
     zip_safe=True,
 )

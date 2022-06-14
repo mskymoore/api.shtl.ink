@@ -10,6 +10,7 @@ from pydantic import BaseModel
 from .models import ShortURLModel, Base
 from .codec import Codec
 from .database import engine
+from .config import root_redirect_url
 
 Base.metadata.create_all(bind=engine)
 codec = Codec()
@@ -74,7 +75,7 @@ def json_response_created(url_record):
 @app.get("/")
 async def root(request: Request):
     return RedirectResponse(
-        url="https://shtl.ink",
+        url=root_redirect_url,
         status_code=status.HTTP_308_PERMANENT_REDIRECT)
 
 
