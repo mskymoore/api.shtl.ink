@@ -1,12 +1,21 @@
+from sqlite3 import connect
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import db_host, db_name, db_user, db_pass
 
-SQLALCHEMY_DATABASE_URL = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
+
+
+if db_host is not None:
+    SQLALCHEMY_DATABASE_URL = f"postgresql://{db_user}:{db_pass}@{db_host}/{db_name}"
+    connect_args={}
+
+else:
+    SQLALCHEMY_DATABASE_URL = "sqlite:///sqlite.db"
+    connect_args={"check_same_thread": False}
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
+    SQLALCHEMY_DATABASE_URL, connect_args=connect_args
 )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

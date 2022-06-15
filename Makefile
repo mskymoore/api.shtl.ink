@@ -8,6 +8,9 @@ build: install-dependencies
 docker-image:
 	docker build -t shtl-ink-api .
 
+start-local-docker:
+	docker run --rm -it  -p 8000:8000/tcp shtl-ink-api:latest
+
 install-dependencies:
 	pip3 install -r requirements.txt
 
