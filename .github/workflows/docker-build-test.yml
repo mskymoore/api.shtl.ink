@@ -19,4 +19,4 @@ jobs:
         tags: shtl-ink-api
     - name: Test Container Image
       run: |
-        docker run --entrypoint pytest --rm -it shtl-ink-api:latest shtl_ink/tests
+        docker run --entrypoint pytest --rm shtl-ink-api:latest shtl_ink/tests
