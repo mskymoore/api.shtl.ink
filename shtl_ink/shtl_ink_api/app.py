@@ -2,6 +2,10 @@ from urllib import response
 from fastapi import FastAPI, Depends, Request, Form, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse, JSONResponse, Response
+from supertokens_python.recipe.session.framework.fastapi import verify_session
+from supertokens_python.recipe.session import SessionContainer
+from supertokens_python.framework.fastapi import get_middleware
+from supertokens_python import get_all_cors_headers
 
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
@@ -16,12 +20,14 @@ Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
 
+app.add_middleware(get_middleware())
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"] + get_all_cors_headers(),
 )
 
 
@@ -49,6 +55,12 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def get_user_id(session):
+    if session is not None:
+        return session.get_user_id()
+    else:
+        return "anonymous"
 
 
 def json_response_not_found(short_code):
@@ -106,7 +118,11 @@ async def go_to_url(
 @app.post("/create_short_code")
 async def create_short_code(
         create_request: CreateRequest,
-        db: Session = Depends(get_db)):
+        db: Session = Depends(get_db),
+        session: SessionContainer = Depends(verify_session(session_required=False))):
+    
+    user_id = get_user_id(session)
+    print(f"USER: {user_id} creating short code...")
 
     if create_request.url == '':
         return JSONResponse({"message": "you must supply a url"},
@@ -114,10 +130,10 @@ async def create_short_code(
 
     url_record = db.execute(
         select(ShortURLModel).where(
-            ShortURLModel.url == create_request.url)).scalars().first()
+            ShortURLModel.url == create_request.url, ShortURLModel.owner_id == user_id)).scalars().first()
 
     if url_record is None:
-        short_code = codec.encode(create_request.url, db)
+        short_code = codec.encode(create_request.url, user_id, db)
 
     else:
         return JSONResponse(url_record.to_dict(),

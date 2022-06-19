@@ -31,6 +31,7 @@ class Codec:
     def url_encode(
             self,
             url: str,
+            owner_id: str,
             multiplier: int,
             session: Session) -> str:
         shift_bits = self.shift_bits
@@ -50,7 +51,7 @@ class Codec:
 
         try:
             session.add(ShortURLModel(
-                url=url, short_code=short_code))
+                url=url, owner_id=owner_id, short_code=short_code))
             session.commit()
             return short_code
 
@@ -59,7 +60,7 @@ class Codec:
             session.rollback()
 
             session.execute(delete(ShortURLModel).where(
-                ShortURLModel.url == url))
+                ShortURLModel.url == url, ShortURLModel.owner_id == owner_id))
             short_code = self.url_encode(
                 url,
                 multiplier +
@@ -68,13 +69,13 @@ class Codec:
                 session)
             return short_code
 
-    def encode(self, url: str, session: Session) -> str:
+    def encode(self, url: str, owner_id: str, session: Session) -> str:
 
         if len(url) > 2000:
             raise Exception(
                 "URL is too long, de facto max length is 2000 characters.")
 
-        return self.url_encode(url, self.multiplier, session)
+        return self.url_encode(url, owner_id, self.multiplier, session)
 
     def decode(self, short_code: str, session: Session) -> str:
         url_record = session.get(ShortURLModel, (short_code))

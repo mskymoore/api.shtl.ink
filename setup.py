@@ -45,6 +45,7 @@ setup(
         "setuptools_rust==1.3.0",
         "sqlalchemy==1.4",
         "sqlalchemy_serializer==1.4.1",
+        "supertokens-python==0.8.4",
         "uvicorn[standard]==0.17.6",
         "virtualenv==20.14.1"
     ],
