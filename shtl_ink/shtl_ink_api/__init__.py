@@ -16,9 +16,6 @@ init(
         website_base_path="/auth"
     ),
     supertokens_config=SupertokensConfig(
-        # try.supertokens.com is for demo purposes. Replace this with the address of your core instance (sign up on supertokens.com), or self host a core.
-        # connection_uri="https://b60ca471ef4011ec8cdeb9c2656574d2-ap-southeast-1.aws.supertokens.io:3570",
-        # api_key="TGY0bEa5YQe0k1kUqm=sKPre70GruS"
         connection_uri=supertokens_conn_uri,
         api_key=supertokens_api_key
     ),
