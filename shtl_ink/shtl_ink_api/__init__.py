@@ -8,7 +8,7 @@ init(
     app_info=InputAppInfo(
         app_name="shtl.ink",
         api_domain="http://localapi.shtl.ink:8000",
-        website_domain="http://localhost:3000",
+        website_domain="http://shtl.ink:3000",
         api_base_path="/auth",
         website_base_path="/auth"
     ),
@@ -19,7 +19,7 @@ init(
     ),
     framework='fastapi',
     recipe_list=[
-        session.init(), # initializes session features
+        session.init(cookie_domain=".shtl.ink"), # initializes session features
         emailpassword.init()
     ],
     mode='asgi' # use wsgi if you are running using gunicorn

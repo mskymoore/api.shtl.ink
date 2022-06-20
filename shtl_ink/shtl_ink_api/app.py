@@ -24,7 +24,7 @@ app.add_middleware(get_middleware())
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://shtl.ink:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"] + get_all_cors_headers(),
@@ -92,8 +92,13 @@ async def root(request: Request):
 
 
 @app.get("/all_short_codes")
-async def get_all_records(db: Session = Depends(get_db)):
-    url_records = db.execute(select(ShortURLModel)).scalars().all()
+async def get_all_records(
+    db: Session = Depends(get_db),
+    session: SessionContainer = Depends(verify_session(session_required=False))):
+
+    user_id = get_user_id(session)
+    print(f"USER: {user_id} requesting all short codes...")
+    url_records = db.execute(select(ShortURLModel).where(ShortURLModel.owner_id == user_id)).scalars().all()
     url_records = [url_record.to_dict() for url_record in url_records]
     return JSONResponse(url_records)
 
