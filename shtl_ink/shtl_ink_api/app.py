@@ -14,7 +14,7 @@ from pydantic import BaseModel
 from .models import ShortURLModel, Base
 from .codec import Codec
 from .database import engine
-from .config import root_redirect_url
+from .config import frontend_base_url
 
 Base.metadata.create_all(bind=engine)
 codec = Codec()
@@ -24,7 +24,7 @@ app.add_middleware(get_middleware())
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://shtl.ink:3000"],
+    allow_origins=[frontend_base_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"] + get_all_cors_headers(),
@@ -56,6 +56,7 @@ def get_db():
     finally:
         db.close()
 
+
 def get_user_id(session):
     if session is not None:
         return session.get_user_id()
@@ -74,39 +75,46 @@ def json_response_in_use(short_code):
         {"message": f"{short_code} already in use"},
         status_code=status.HTTP_409_CONFLICT)
 
+
 def json_response_not_owned(short_code):
     return JSONResponse(
         {"message": f"{short_code} not owned by you"},
         status_code=status.HTTP_403_FORBIDDEN)
+
 
 def json_response_created(url_record):
     return JSONResponse(
         url_record.to_dict(),
         status_code=status.HTTP_201_CREATED)
 
+
 def json_response_already_reported(url_record):
     return JSONResponse(
-            url_record.to_dict(),
-            status_code=status.HTTP_208_ALREADY_REPORTED)
+        url_record.to_dict(),
+        status_code=status.HTTP_208_ALREADY_REPORTED)
+
 
 def json_response_deleted(short_code, url):
     return JSONResponse(
-            {"message": f"deleted record {short_code} -> {url}"},
-            status_code=status.HTTP_200_OK)
+        {"message": f"deleted record {short_code} -> {url}"},
+        status_code=status.HTTP_200_OK)
+
 
 def json_response_record(url_record):
     return JSONResponse(
-            url_record.to_dict(),
-            status_code=status.HTTP_200_OK)
+        url_record.to_dict(),
+        status_code=status.HTTP_200_OK)
+
 
 def json_response_missing(something):
     return JSONResponse({"message": f"you must supply {something}"},
-                            status_code=status.HTTP_406_NOT_ACCEPTABLE)
+                        status_code=status.HTTP_406_NOT_ACCEPTABLE)
+
 
 def json_response_failure():
     return JSONResponse(
-            {"message": "something went wrong..."},
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        {"message": "something went wrong..."},
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 # all reserved endings that have no form data need to be before
 # short code redirect reciever
 
@@ -114,17 +122,18 @@ def json_response_failure():
 @app.get("/")
 async def root(request: Request):
     return RedirectResponse(
-        url=root_redirect_url,
+        url=frontend_base_url,
         status_code=status.HTTP_308_PERMANENT_REDIRECT)
 
 
 @app.get("/all_short_codes")
 async def get_all_records(
-    db: Session = Depends(get_db),
-    session: SessionContainer = Depends(verify_session(session_required=False))):
+        db: Session = Depends(get_db),
+        session: SessionContainer = Depends(verify_session(session_required=False))):
 
     user_id = get_user_id(session)
-    url_records = db.execute(select(ShortURLModel).where(ShortURLModel.owner_id == user_id)).scalars().all()
+    url_records = db.execute(select(ShortURLModel).where(
+        ShortURLModel.owner_id == user_id)).scalars().all()
     url_records = [url_record.to_dict() for url_record in url_records]
     return JSONResponse(url_records)
 
@@ -159,7 +168,8 @@ async def create_short_code(
 
     url_record = db.execute(
         select(ShortURLModel).where(
-            ShortURLModel.url == create_request.url, ShortURLModel.owner_id == user_id)).scalars().first()
+            ShortURLModel.url == create_request.url,
+            ShortURLModel.owner_id == user_id)).scalars().first()
 
     if url_record is None:
         short_code = codec.encode(create_request.url, user_id, db)
@@ -184,16 +194,16 @@ async def create_custom_short_code(
     user_id = get_user_id(session)
 
     if create_custom_request.short_code == '' or create_custom_request.url == '':
-        return  json_response_missing("a url and short code")
+        return json_response_missing("a url and short code")
 
     url_record = db.get(ShortURLModel, (create_custom_request.short_code))
 
     if url_record is not None and url_record.url == create_custom_request.url and url_record.owner_id == user_id:
         return json_response_already_reported(url_record)
-    
+
     if url_record is not None:
         return json_response_in_use(url_record.short_code)
-    
+
     try:
         url_record = ShortURLModel(
             owner_id=user_id,
@@ -253,7 +263,7 @@ async def Delete_url_short_code(
 
     if url_record is None:
         return json_response_not_found(url_request.short_code)
-    
+
     if url_record.owner_id != user_id:
         return json_response_not_owned(url_record.short_code)
 

@@ -1,18 +1,44 @@
 import os
 
-if 'BASE_URL' in os.environ and 'ROOT_REDIRECT_URL' in os.environ:
-    base_url = os.environ['BASE_URL']
-    root_redirect_url = os.environ['ROOT_REDIRECT_URL']
+_app_name = 'APP_NAME'
+_base_url = 'BASE_URL'
+_frontend_base_url = 'FRONTEND_BASE_URL'
+_cookie_domain = 'COOKIE_DOMAIN'
+_supertokens_conn_uri = 'SUPERTOKENS_CONN_URI'
+_supertokens_api_key = 'SUPERTOKENS_API_KEY'
+_db_host = 'DB_HOST'
+_db_name = 'DB_NAME'
+_db_user = 'DB_USER'
+_db_pass = 'DB_PASS'
+
+if _app_name in os.environ:
+    app_name = os.environ[_app_name]
 else:
-    base_url = "http://localhost:8000"
-    root_redirect_url = "http://localhost:3000"
+    app_name = "shtl.ink"
+
+if _base_url in os.environ and _frontend_base_url in os.environ and _cookie_domain in os.environ:
+    base_url = os.environ[_base_url]
+    frontend_base_url = os.environ[_frontend_base_url]
+    cookie_domain = os.environ[_cookie_domain]
+else:
+    base_url = "http://localapi.shtl.ink:8000"
+    frontend_base_url = "http://shtl.ink:3000"
+    cookie_domain = ".shtl.ink"
     print('URL environment variables not set, falling back to demo mode')
 
-if 'DB_HOST' in os.environ:
-    db_host = os.environ['DB_HOST']
-    db_name = os.environ['DB_NAME']
-    db_user = os.environ['DB_USER']
-    db_pass = os.environ['DB_PASS']
+if _supertokens_conn_uri in os.environ and _supertokens_api_key in os.environ:
+    supertokens_conn_uri = os.environ[_supertokens_conn_uri]
+    supertokens_api_key = os.environ[_supertokens_api_key]
+else:
+    supertokens_conn_uri = "try.supertokens.com"
+    supertokens_api_key = None
+    print('Supertokens environment variables not set, falling back to try.supertokens.com')
+
+if _db_host in os.environ and _db_name in os.environ and _db_user in os.environ and _db_pass in os.environ:
+    db_host = os.environ[_db_host]
+    db_name = os.environ[_db_name]
+    db_user = os.environ[_db_user]
+    db_pass = os.environ[_db_pass]
 else:
     db_host, db_name, db_user, db_pass = None, None, None, None
     print('DB environment variables not set, falling back to sqlite')

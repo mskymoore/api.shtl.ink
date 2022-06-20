@@ -11,9 +11,13 @@
 ## Configure environment variables
 ```
 # requires postgres database
+export APP_NAME=shtl.ink
 export BASE_URL=http://localhost:8000
-# where to redirect / to
-export ROOT_REDIRECT_URL=http://shtl.ink
+# where to redirect / to, also allow_origin
+export FRONTEND_BASE_URL=http://shtl.ink
+export SUPERTOKENS_CONN_URI=https://try.supertokens.com
+export SUPERTOKENS_API_KEY=someapikeyhere
+export COOKIE_DOMAIN=.shtl.ink
 export DB_HOST=abcd
 export DB_NAME=abcd
 export DB_USER=abcd
