@@ -22,7 +22,7 @@ token_response = post(
     data={
         "grant_type": "password",
         "username": os.environ.get("TEST_USER"),
-        "password": os.environ.get("TEST_PASS")
+        "password": os.environ.get("TEST_PASS"),
         # Tempoararily diabled OTP on direct grant auth method
         # "otp": os.environ.get("TEST_OTP"),
         "client_id": client_id,
