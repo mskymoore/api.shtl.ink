@@ -10,3 +10,4 @@ __py*
 shtl_ink/build
 dist
 .venv
+.env
