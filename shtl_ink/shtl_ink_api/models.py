@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 Base = declarative_base()
 
+
 class ShortURLModel(Base, SerializerMixin):
     """
     ShortURLModel: Schema for database table with three columns, id(the primary key),
@@ -26,7 +27,7 @@ class ShortURLModel(Base, SerializerMixin):
     def __repr__(self):
         return f"URL(url={self.url!r}, \
                  short_code={self.short_code!r})"
-    
+
 
 class ModificiationRequest(BaseModel):
     short_code: str

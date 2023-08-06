@@ -1,6 +1,6 @@
-
 from starlette.responses import JSONResponse
 from fastapi import status
+
 
 def json_response_not_found(short_code):
     return JSONResponse(

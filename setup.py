@@ -27,7 +27,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10"
+        "Programming Language :: Python :: 3.10",
     ],
     description="Python URL Shortener",
     include_package_data=True,
@@ -47,7 +47,7 @@ setup(
         "sqlalchemy_serializer==1.4.1",
         "supertokens-python==0.8.4",
         "uvicorn[standard]==0.17.6",
-        "virtualenv==20.14.1"
+        "virtualenv==20.14.1",
     ],
     keywords=["url", "url_shortener", "api"],
     license="MIT license",
