@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from armasec import OpenidConfigLoader, TokenManager, TokenDecoder, TokenSecurity
 from starlette.responses import RedirectResponse, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -15,7 +16,7 @@ from .models import ShortURLModel, ModificiationRequest, UrlRequest
 from .models import CreateRequest, CreateCustomRequest, Base
 from .codec import Codec
 from .database import engine
-from .config import frontend_base_url
+from .config import frontend_base_url, oidc_audience, oidc_issuer
 
 log = getLogger(__name__)
 log.info("Logger initialized, starting shtl_ink_api...")
@@ -24,7 +25,21 @@ Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
 
-# app.add_middleware()
+openid_config = OpenidConfigLoader(
+    domain=oidc_issuer, use_https=True, debug_logger=log.debug
+)
+
+token_decoder = TokenDecoder(jwks=openid_config.jwks, debug_logger=log.debug)
+
+token_manager = TokenManager(
+    openid_config=openid_config,
+    token_decoder=token_decoder,
+    audience=oidc_audience,
+    debug_logger=log.debug,
+)
+
+armasec = TokenSecurity(domain_configs=[openid_config], debug_logger=log.debug)
+armasec.managers = [token_manager]
 
 app.add_middleware(
     CORSMiddleware,
@@ -50,7 +65,6 @@ def get_user_id(session):
         return "anonymous"
 
 
-
 # all reserved endings that have no form data need to be before
 # short code redirect reciever
 @app.get("/")
@@ -60,7 +74,7 @@ async def root(request: Request):
     )
 
 
-@app.get("/all_short_codes")
+@app.get("/all_short_codes", dependencies=[Depends(armasec)])
 async def get_all_records(db: Session = Depends(get_db)):
 
     user_id = "anonymous"

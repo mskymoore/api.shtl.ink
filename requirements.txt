@@ -13,3 +13,4 @@ sqlalchemy_serializer>=1.4.1
 uvicorn[standard]>=0.17.6
 virtualenv>=20.14.1
 python-dotenv>=1.0.0
+armasec>=1.0.0

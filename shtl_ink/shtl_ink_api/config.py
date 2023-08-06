@@ -33,7 +33,7 @@ oidc_issuer = os.environ.get(_oidc_issuer, "https://iam.rwx.dev/realms/rwxdev")
 client_id = os.environ.get(_client_id, "api.shtl.ink")
 client_secret = os.environ.get(_client_secret, None)
 
-token_url = f"{oidc_issuer}/protocol/openid-connect/token"
+token_url = f"https://{oidc_issuer}/protocol/openid-connect/token"
 
 token_response = post(
     token_url,
