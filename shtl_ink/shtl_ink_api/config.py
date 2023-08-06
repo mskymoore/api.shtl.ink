@@ -1,4 +1,7 @@
 import os
+from logging import getLogger
+
+log = getLogger(__name__)
 
 _app_name = "APP_NAME"
 _base_url = "BASE_URL"
@@ -26,7 +29,7 @@ else:
     base_url = "http://localapi.shtl.ink:8000"
     frontend_base_url = "http://shtl.ink:3000"
     cookie_domain = ".shtl.ink"
-    print("URL environment variables not set, falling back to demo mode")
+    log.info("URL environment variables not set, falling back to demo mode")
 
 if (
     _db_host in os.environ
@@ -40,4 +43,4 @@ if (
     db_pass = os.environ[_db_pass]
 else:
     db_host, db_name, db_user, db_pass = None, None, None, None
-    print("DB environment variables not set, falling back to sqlite")
+    log.info("DB environment variables not set, falling back to sqlite")

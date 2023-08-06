@@ -1,5 +1,5 @@
 from pkg_resources import declare_namespace
+from logging import basicConfig, INFO
 
-from .config import app_name, base_url, frontend_base_url, cookie_domain
-
+basicConfig(level=INFO)
 declare_namespace("shtl_ink_api")

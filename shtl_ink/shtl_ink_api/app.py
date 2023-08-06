@@ -1,16 +1,24 @@
-from urllib import response
-from fastapi import FastAPI, Depends, Request, Form, status
+from fastapi import FastAPI, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.responses import RedirectResponse, JSONResponse, Response
-
-from sqlalchemy import select, delete
+from starlette.responses import RedirectResponse, JSONResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
-from pydantic import BaseModel
-from .models import ShortURLModel, Base
+from logging import getLogger
+
+from .responses import json_response_already_reported, json_response_created
+from .responses import json_response_failure, json_response_missing
+from .responses import json_response_not_found, json_response_not_owned
+from .responses import json_response_deleted, json_response_record
+from .responses import json_response_in_use
+from .models import ShortURLModel, ModificiationRequest, UrlRequest
+from .models import CreateRequest, CreateCustomRequest, Base
 from .codec import Codec
 from .database import engine
 from .config import frontend_base_url
+
+log = getLogger(__name__)
+log.info("Logger initialized, starting shtl_ink_api...")
 
 Base.metadata.create_all(bind=engine)
 codec = Codec()
@@ -25,24 +33,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-class ModificiationRequest(BaseModel):
-    short_code: str
-    new_short_code: str
-
-
-class CreateRequest(BaseModel):
-    url: str
-
-
-class CreateCustomRequest(BaseModel):
-    short_code: str
-    url: str
-
-
-class UrlRequest(BaseModel):
-    short_code: str
 
 
 def get_db():
@@ -60,65 +50,9 @@ def get_user_id(session):
         return "anonymous"
 
 
-def json_response_not_found(short_code):
-    return JSONResponse(
-        {"message": f"{short_code} not found"}, status_code=status.HTTP_404_NOT_FOUND
-    )
-
-
-def json_response_in_use(short_code):
-    return JSONResponse(
-        {"message": f"{short_code} already in use"},
-        status_code=status.HTTP_409_CONFLICT,
-    )
-
-
-def json_response_not_owned(short_code):
-    return JSONResponse(
-        {"message": f"{short_code} not owned by you"},
-        status_code=status.HTTP_403_FORBIDDEN,
-    )
-
-
-def json_response_created(url_record):
-    return JSONResponse(url_record.to_dict(), status_code=status.HTTP_201_CREATED)
-
-
-def json_response_already_reported(url_record):
-    return JSONResponse(
-        url_record.to_dict(), status_code=status.HTTP_208_ALREADY_REPORTED
-    )
-
-
-def json_response_deleted(short_code, url):
-    return JSONResponse(
-        {"message": f"deleted record {short_code} -> {url}"},
-        status_code=status.HTTP_200_OK,
-    )
-
-
-def json_response_record(url_record):
-    return JSONResponse(url_record.to_dict(), status_code=status.HTTP_200_OK)
-
-
-def json_response_missing(something):
-    return JSONResponse(
-        {"message": f"you must supply {something}"},
-        status_code=status.HTTP_406_NOT_ACCEPTABLE,
-    )
-
-
-def json_response_failure():
-    return JSONResponse(
-        {"message": "something went wrong..."},
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-    )
-
 
 # all reserved endings that have no form data need to be before
 # short code redirect reciever
-
-
 @app.get("/")
 async def root(request: Request):
     return RedirectResponse(
@@ -154,8 +88,6 @@ async def go_to_url(short_code: str, db: Session = Depends(get_db)):
 
 
 # all endpoints with form data
-
-
 @app.post("/create_short_code")
 async def create_short_code(
     create_request: CreateRequest,
@@ -225,7 +157,8 @@ async def create_custom_short_code(
         db.commit()
         return json_response_created(url_record)
 
-    except IntegrityError:
+    except IntegrityError as e:
+        log.error(e)
         db.rollback()
         return json_response_in_use(create_custom_request.short_code)
 
@@ -282,6 +215,7 @@ async def Delete_url_short_code(
         return json_response_deleted(url_request.short_code, url)
 
     except Exception as e:
+        log.error(e)
         db.rollback()
         return json_response_failure()
 
@@ -309,8 +243,8 @@ async def delete_url_short_code(
         return json_response_deleted(short_code, url)
 
     except Exception as e:
+        log.error(e)
         db.rollback()
-        print
         return json_response_failure()
 
 
@@ -342,6 +276,7 @@ async def modify_url_short_code(
         db.commit()
         return JSONResponse(url_record.to_dict(), status_code=status.HTTP_202_ACCEPTED)
 
-    except IntegrityError:
+    except IntegrityError as e:
+        log.error(e)
         db.rollback()
         return json_response_in_use(mod_request.new_short_code)
