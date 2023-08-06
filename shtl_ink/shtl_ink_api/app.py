@@ -33,12 +33,13 @@ openid_config = OpenidConfigLoader(
 
 domain_config = DomainConfig(domain=oidc_issuer, audience=oidc_audience)
 
-decode_options_override = {"verify_exp": False}
+# decode_options_override = {"verify_exp": False}
+# decode_options_override = {}
 
 token_decoder = TokenDecoder(
     jwks=openid_config.jwks,
     debug_logger=log.debug,
-    decode_options_override=decode_options_override,
+    # decode_options_override=decode_options_override,
 )
 
 token_manager = TokenManager(
@@ -51,8 +52,8 @@ token_manager = TokenManager(
 token_manager_config = ManagerConfig(manager=token_manager, domain_config=domain_config)
 
 armasec = TokenSecurity(
-    domain_configs=[domain_config], debug_logger=log.debug
-)  # , debug_exceptions=True)
+    domain_configs=[domain_config], debug_logger=log.debug  # , debug_exceptions=True
+)
 armasec.managers = [token_manager_config]
 
 app.add_middleware(
