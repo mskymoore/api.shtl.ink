@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from armasec import OpenidConfigLoader, TokenManager, TokenDecoder, TokenSecurity
+from armasec.schemas.armasec_config import DomainConfig
+from armasec.token_security import ManagerConfig
 from starlette.responses import RedirectResponse, JSONResponse
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -29,7 +31,15 @@ openid_config = OpenidConfigLoader(
     domain=oidc_issuer, use_https=True, debug_logger=log.debug
 )
 
-token_decoder = TokenDecoder(jwks=openid_config.jwks, debug_logger=log.debug)
+domain_config = DomainConfig(domain=oidc_issuer, audience=oidc_audience)
+
+decode_options_override = {"verify_exp": False}
+
+token_decoder = TokenDecoder(
+    jwks=openid_config.jwks,
+    debug_logger=log.debug,
+    decode_options_override=decode_options_override,
+)
 
 token_manager = TokenManager(
     openid_config=openid_config,
@@ -38,8 +48,12 @@ token_manager = TokenManager(
     debug_logger=log.debug,
 )
 
-armasec = TokenSecurity(domain_configs=[openid_config], debug_logger=log.debug)
-armasec.managers = [token_manager]
+token_manager_config = ManagerConfig(manager=token_manager, domain_config=domain_config)
+
+armasec = TokenSecurity(
+    domain_configs=[domain_config], debug_logger=log.debug
+)  # , debug_exceptions=True)
+armasec.managers = [token_manager_config]
 
 app.add_middleware(
     CORSMiddleware,
