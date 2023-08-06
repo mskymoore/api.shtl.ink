@@ -1,7 +1,10 @@
 #!.venv/bin/python3
 import os
 from requests import get
+from dotenv import load_dotenv
 from shtl_ink.shtl_ink_api.token import get_token
+
+load_dotenv()
 
 if __name__ == "__main__":
 

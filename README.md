@@ -1,4 +1,4 @@
-# shtl.ink api
+# shtl.ink api with keycloak oauth endpoint protection
 **URL Shortener built with Python and FastAPI**
 
 [github repository](https://github.com/mskymoore/url_shortener)
@@ -8,20 +8,28 @@
 1. Run App
 2. Navigate to http://localhost:8000/docs or http://localhost:8000/redoc
 
-## Configure environment variables
+## Create a `.env` file
 ```
-# requires postgres database
-export APP_NAME=shtl.ink
-export BASE_URL=http://localhost:8000
+APP_NAME=shtl.ink
+BASE_URL=http://localhost:8000
 # where to redirect / to, also allow_origin
-export FRONTEND_BASE_URL=http://shtl.ink
-export SUPERTOKENS_CONN_URI=https://try.supertokens.com
-export SUPERTOKENS_API_KEY=someapikeyhere
-export COOKIE_DOMAIN=.shtl.ink
-export DB_HOST=abcd
-export DB_NAME=abcd
-export DB_USER=abcd
-export DB_PASS=abcd
+FRONTEND_BASE_URL=http://shtl.ink
+COOKIE_DOMAIN=.shtl.ink
+
+OIDC_AUDIENCE=api.shtl.ink
+OIDC_ISSUER=iam.rwx.dev/realms/rwxdev
+
+# optional to request a token with test.py
+CLIENT_ID=someClientId
+CLIENT_SECRET=someClientSecret
+TEST_USER=username
+TEST_PASS=password
+
+# requires postgres database
+DB_HOST=abcd
+DB_NAME=abcd
+DB_USER=abcd
+DB_PASS=abcd
 ```
 
 ## Build Local

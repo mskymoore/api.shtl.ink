@@ -1,9 +1,6 @@
 import os
-from requests import post, get
-from dotenv import load_dotenv
+from requests import post
 import pyperclip
-
-load_dotenv()
 
 
 def get_token(username, password, clipboard=False):
@@ -12,10 +9,12 @@ def get_token(username, password, clipboard=False):
     _client_id = "CLIENT_ID"
     _client_secret = "CLIENT_SECRET"
 
-    oidc_audience = os.environ.get(_oidc_audience, "api.shtl.ink")
     oidc_issuer = os.environ.get(_oidc_issuer, "https://iam.rwx.dev/realms/rwxdev")
     client_id = os.environ.get(_client_id, "api.shtl.ink")
     client_secret = os.environ.get(_client_secret, None)
+
+    if not client_secret:
+        raise Exception("CLIENT_SECRET is not in the environment.")
 
     token_url = f"https://{oidc_issuer}/protocol/openid-connect/token"
 
