@@ -9,3 +9,4 @@ __py*
 *.egg-info
 shtl_ink/build
 dist
+.venv

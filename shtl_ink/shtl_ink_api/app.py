@@ -2,10 +2,6 @@ from urllib import response
 from fastapi import FastAPI, Depends, Request, Form, status
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse, JSONResponse, Response
-from supertokens_python.recipe.session.framework.fastapi import verify_session
-from supertokens_python.recipe.session import SessionContainer
-from supertokens_python.framework.fastapi import get_middleware
-from supertokens_python import get_all_cors_headers
 
 from sqlalchemy import select, delete
 from sqlalchemy.orm import Session
@@ -20,14 +16,14 @@ Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
 
-app.add_middleware(get_middleware())
+# app.add_middleware()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[frontend_base_url],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"] + get_all_cors_headers(),
+    allow_headers=["*"],
 )
 
 
@@ -66,55 +62,59 @@ def get_user_id(session):
 
 def json_response_not_found(short_code):
     return JSONResponse(
-        {"message": f"{short_code} not found"},
-        status_code=status.HTTP_404_NOT_FOUND)
+        {"message": f"{short_code} not found"}, status_code=status.HTTP_404_NOT_FOUND
+    )
 
 
 def json_response_in_use(short_code):
     return JSONResponse(
         {"message": f"{short_code} already in use"},
-        status_code=status.HTTP_409_CONFLICT)
+        status_code=status.HTTP_409_CONFLICT,
+    )
 
 
 def json_response_not_owned(short_code):
     return JSONResponse(
         {"message": f"{short_code} not owned by you"},
-        status_code=status.HTTP_403_FORBIDDEN)
+        status_code=status.HTTP_403_FORBIDDEN,
+    )
 
 
 def json_response_created(url_record):
-    return JSONResponse(
-        url_record.to_dict(),
-        status_code=status.HTTP_201_CREATED)
+    return JSONResponse(url_record.to_dict(), status_code=status.HTTP_201_CREATED)
 
 
 def json_response_already_reported(url_record):
     return JSONResponse(
-        url_record.to_dict(),
-        status_code=status.HTTP_208_ALREADY_REPORTED)
+        url_record.to_dict(), status_code=status.HTTP_208_ALREADY_REPORTED
+    )
 
 
 def json_response_deleted(short_code, url):
     return JSONResponse(
         {"message": f"deleted record {short_code} -> {url}"},
-        status_code=status.HTTP_200_OK)
+        status_code=status.HTTP_200_OK,
+    )
 
 
 def json_response_record(url_record):
-    return JSONResponse(
-        url_record.to_dict(),
-        status_code=status.HTTP_200_OK)
+    return JSONResponse(url_record.to_dict(), status_code=status.HTTP_200_OK)
 
 
 def json_response_missing(something):
-    return JSONResponse({"message": f"you must supply {something}"},
-                        status_code=status.HTTP_406_NOT_ACCEPTABLE)
+    return JSONResponse(
+        {"message": f"you must supply {something}"},
+        status_code=status.HTTP_406_NOT_ACCEPTABLE,
+    )
 
 
 def json_response_failure():
     return JSONResponse(
         {"message": "something went wrong..."},
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    )
+
+
 # all reserved endings that have no form data need to be before
 # short code redirect reciever
 
@@ -122,26 +122,25 @@ def json_response_failure():
 @app.get("/")
 async def root(request: Request):
     return RedirectResponse(
-        url=frontend_base_url,
-        status_code=status.HTTP_308_PERMANENT_REDIRECT)
+        url=frontend_base_url, status_code=status.HTTP_308_PERMANENT_REDIRECT
+    )
 
 
 @app.get("/all_short_codes")
-async def get_all_records(
-        db: Session = Depends(get_db),
-        session: SessionContainer = Depends(verify_session(session_required=False))):
+async def get_all_records(db: Session = Depends(get_db)):
 
-    user_id = get_user_id(session)
-    url_records = db.execute(select(ShortURLModel).where(
-        ShortURLModel.owner_id == user_id)).scalars().all()
+    user_id = "anonymous"
+    url_records = (
+        db.execute(select(ShortURLModel).where(ShortURLModel.owner_id == user_id))
+        .scalars()
+        .all()
+    )
     url_records = [url_record.to_dict() for url_record in url_records]
     return JSONResponse(url_records)
 
 
 @app.get("/{short_code}")
-async def go_to_url(
-        short_code: str,
-        db: Session = Depends(get_db)):
+async def go_to_url(short_code: str, db: Session = Depends(get_db)):
 
     url_record = db.get(ShortURLModel, (short_code))
 
@@ -150,26 +149,34 @@ async def go_to_url(
 
     else:
         return RedirectResponse(
-            url=url_record.url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+            url=url_record.url, status_code=status.HTTP_307_TEMPORARY_REDIRECT
+        )
+
 
 # all endpoints with form data
 
 
 @app.post("/create_short_code")
 async def create_short_code(
-        create_request: CreateRequest,
-        db: Session = Depends(get_db),
-        session: SessionContainer = Depends(verify_session(session_required=False))):
+    create_request: CreateRequest,
+    db: Session = Depends(get_db),
+):
 
-    user_id = get_user_id(session)
+    user_id = "anonymous"
 
-    if create_request.url == '':
+    if create_request.url == "":
         return json_response_missing("a url")
 
-    url_record = db.execute(
-        select(ShortURLModel).where(
-            ShortURLModel.url == create_request.url,
-            ShortURLModel.owner_id == user_id)).scalars().first()
+    url_record = (
+        db.execute(
+            select(ShortURLModel).where(
+                ShortURLModel.url == create_request.url,
+                ShortURLModel.owner_id == user_id,
+            )
+        )
+        .scalars()
+        .first()
+    )
 
     if url_record is None:
         short_code = codec.encode(create_request.url, user_id, db)
@@ -187,18 +194,22 @@ async def create_short_code(
 
 @app.post("/create_custom_short_code")
 async def create_custom_short_code(
-        create_custom_request: CreateCustomRequest,
-        db: Session = Depends(get_db),
-        session: SessionContainer = Depends(verify_session(session_required=False))):
+    create_custom_request: CreateCustomRequest,
+    db: Session = Depends(get_db),
+):
 
-    user_id = get_user_id(session)
+    user_id = "anonymous"
 
-    if create_custom_request.short_code == '' or create_custom_request.url == '':
+    if create_custom_request.short_code == "" or create_custom_request.url == "":
         return json_response_missing("a url and short code")
 
     url_record = db.get(ShortURLModel, (create_custom_request.short_code))
 
-    if url_record is not None and url_record.url == create_custom_request.url and url_record.owner_id == user_id:
+    if (
+        url_record is not None
+        and url_record.url == create_custom_request.url
+        and url_record.owner_id == user_id
+    ):
         return json_response_already_reported(url_record)
 
     if url_record is not None:
@@ -208,7 +219,8 @@ async def create_custom_short_code(
         url_record = ShortURLModel(
             owner_id=user_id,
             url=create_custom_request.url,
-            short_code=create_custom_request.short_code)
+            short_code=create_custom_request.short_code,
+        )
         db.add(url_record)
         db.commit()
         return json_response_created(url_record)
@@ -219,11 +231,9 @@ async def create_custom_short_code(
 
 
 @app.post("/short_code")
-async def Get_short_code_url(
-        url_request: UrlRequest,
-        db: Session = Depends(get_db)):
+async def Get_short_code_url(url_request: UrlRequest, db: Session = Depends(get_db)):
 
-    if url_request.short_code == '':
+    if url_request.short_code == "":
         return json_response_missing("a short code")
 
     url_record = db.get(ShortURLModel, (url_request.short_code))
@@ -236,9 +246,7 @@ async def Get_short_code_url(
 
 
 @app.get("/short_code/{short_code}")
-async def get_short_code_url(
-        short_code: str,
-        db: Session = Depends(get_db)):
+async def get_short_code_url(short_code: str, db: Session = Depends(get_db)):
     url_record = db.get(ShortURLModel, (short_code))
 
     if url_record is None:
@@ -250,13 +258,13 @@ async def get_short_code_url(
 
 @app.delete("/delete_short_code")
 async def Delete_url_short_code(
-        url_request: UrlRequest,
-        db: Session = Depends(get_db),
-        session: SessionContainer = Depends(verify_session(session_required=False))):
+    url_request: UrlRequest,
+    db: Session = Depends(get_db),
+):
 
-    user_id = get_user_id(session)
+    user_id = "anonymous"
 
-    if url_request.short_code == '':
+    if url_request.short_code == "":
         return json_response_missing("a short code")
 
     url_record = db.get(ShortURLModel, (url_request.short_code))
@@ -280,11 +288,11 @@ async def Delete_url_short_code(
 
 @app.delete("/delete_short_code/{short_code}")
 async def delete_url_short_code(
-        short_code: str,
-        db: Session = Depends(get_db),
-        session: SessionContainer = Depends(verify_session(session_required=False))):
+    short_code: str,
+    db: Session = Depends(get_db),
+):
 
-    user_id = get_user_id(session)
+    user_id = "anonymous"
 
     url_record = db.get(ShortURLModel, (short_code))
 
@@ -308,13 +316,13 @@ async def delete_url_short_code(
 
 @app.post("/modify_short_code")
 async def modify_url_short_code(
-        mod_request: ModificiationRequest,
-        db: Session = Depends(get_db),
-        session: SessionContainer = Depends(verify_session(session_required=False))):
+    mod_request: ModificiationRequest,
+    db: Session = Depends(get_db),
+):
 
-    user_id = get_user_id(session)
+    user_id = "anonymous"
 
-    if mod_request.short_code == '' or mod_request.new_short_code == '':
+    if mod_request.short_code == "" or mod_request.new_short_code == "":
         return json_response_missing("a short code and a new short code")
 
     url_record = db.get(ShortURLModel, (mod_request.short_code))
@@ -332,9 +340,7 @@ async def modify_url_short_code(
     try:
         url_record.short_code = mod_request.new_short_code
         db.commit()
-        return JSONResponse(
-            url_record.to_dict(),
-            status_code=status.HTTP_202_ACCEPTED)
+        return JSONResponse(url_record.to_dict(), status_code=status.HTTP_202_ACCEPTED)
 
     except IntegrityError:
         db.rollback()

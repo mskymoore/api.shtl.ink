@@ -9,7 +9,7 @@ docker-image:
 	docker build -t shtl-ink-api .
 
 start-local-docker:
-	docker run --rm -it  -p 8000:8000/tcp shtl-ink-api:latest
+	docker run --rm -it -e APP_NAME -e BASE_URL -e FRONTEND_BASE_URL -e SUPERTOKENS_CONN_URI -e SUPERTOKENS_API_KEY -e COOKIE_DOMAIN -p 8000:8000/tcp shtl-ink-api:latest
 
 install-dependencies:
 	pip3 install -r requirements.txt

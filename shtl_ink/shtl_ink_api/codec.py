@@ -21,7 +21,7 @@ class Codec:
 
     def __init__(self):
         # no vowels, no visually ambiguous characters
-        self.alphabet = '23456789bcdfghjkmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ'
+        self.alphabet = "23456789bcdfghjkmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ"
         self.base = len(self.alphabet) - 1
         # short code is 6 characters
         self.shifts = range(2, 8)
@@ -29,13 +29,10 @@ class Codec:
         self.multiplier = 333
 
     def url_encode(
-            self,
-            url: str,
-            owner_id: str,
-            multiplier: int,
-            session: Session) -> str:
+        self, url: str, owner_id: str, multiplier: int, session: Session
+    ) -> str:
         shift_bits = self.shift_bits
-        short_code = ''
+        short_code = ""
         # The number of available urls in this config is 13,983,816 by nCk(nChoosek)
         # where n is the total number of characters available and k is the number
         # of characters in the short code.  Don't know if it's possible to have
@@ -50,8 +47,9 @@ class Codec:
             shift_bits -= 2
 
         try:
-            session.add(ShortURLModel(
-                url=url, owner_id=owner_id, short_code=short_code))
+            session.add(
+                ShortURLModel(url=url, owner_id=owner_id, short_code=short_code)
+            )
             session.commit()
             return short_code
 
@@ -59,21 +57,20 @@ class Codec:
         except IntegrityError:
             session.rollback()
 
-            session.execute(delete(ShortURLModel).where(
-                ShortURLModel.url == url, ShortURLModel.owner_id == owner_id))
+            session.execute(
+                delete(ShortURLModel).where(
+                    ShortURLModel.url == url, ShortURLModel.owner_id == owner_id
+                )
+            )
             short_code = self.url_encode(
-                url,
-                multiplier +
-                random.choice(
-                    self.shifts),
-                session)
+                url, multiplier + random.choice(self.shifts), session
+            )
             return short_code
 
     def encode(self, url: str, owner_id: str, session: Session) -> str:
 
         if len(url) > 2000:
-            raise Exception(
-                "URL is too long, de facto max length is 2000 characters.")
+            raise Exception("URL is too long, de facto max length is 2000 characters.")
 
         return self.url_encode(url, owner_id, self.multiplier, session)
 

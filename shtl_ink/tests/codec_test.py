@@ -27,7 +27,7 @@ def test_get_test_urls() -> List[str]:
     """
     test that test data is accessible
     """
-    with open('data/input_urls.txt', 'r') as file:
+    with open("data/input_urls.txt", "r") as file:
         return file.read().splitlines()
 
 
@@ -54,7 +54,7 @@ def test_url_length(a_codec, sql_session) -> None:
     test that a url over 2000 characters raises an exception
     """
     with raises(Exception):
-        a_codec.encode(str(['c' for c in range(2001)]), sql_session)
+        a_codec.encode(str(["c" for c in range(2001)]), sql_session)
 
 
 def test_absent_short_code(a_codec, sql_session) -> None:
@@ -93,7 +93,12 @@ def test_decode(sql_session, a_codec) -> None:
     for _ in range(333):
         i = random.choice(index)
 
-        a_url = sql_session.execute(select(ShortURLModel).where(
-            ShortURLModel.url == urls[i])).scalars().first()
+        a_url = (
+            sql_session.execute(
+                select(ShortURLModel).where(ShortURLModel.url == urls[i])
+            )
+            .scalars()
+            .first()
+        )
 
         assert a_codec.decode(a_url.short_code, sql_session) == a_url.url

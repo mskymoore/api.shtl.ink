@@ -14,7 +14,8 @@ class ShortURLModel(Base, SerializerMixin):
         url(the original url), and short_code, the shortened code keying the url
         in the databse.
     """
-    __tablename__ = 'short_code_to_url'
+
+    __tablename__ = "short_code_to_url"
     # 2000 characters is defacto max url length
     owner_id = Column(String(2000), unique=False, default="anonymous")
     url = Column(String(2000), unique=False)
