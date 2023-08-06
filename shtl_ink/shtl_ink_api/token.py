@@ -3,8 +3,7 @@ from requests import post
 import pyperclip
 
 
-def get_token(username, password, clipboard=False):
-    _oidc_audience = "OIDC_AUDIENCE"
+def get_token(username, password, otp=None, clipboard=False):
     _oidc_issuer = "OIDC_ISSUER"
     _client_id = "CLIENT_ID"
     _client_secret = "CLIENT_SECRET"
@@ -13,22 +12,37 @@ def get_token(username, password, clipboard=False):
     client_id = os.environ.get(_client_id, "api.shtl.ink")
     client_secret = os.environ.get(_client_secret, None)
 
-    if not client_secret:
-        raise Exception("CLIENT_SECRET is not in the environment.")
+    missing_vars = [
+        name
+        for name, value in [
+            ("CLIENT_SECRET", client_secret),
+            ("CLIENT_ID", client_id),
+            ("OIDC_ISSUER", oidc_issuer),
+        ]
+        if not value
+    ]
+
+    if missing_vars:
+        raise Exception(
+            f"{', '.join(missing_vars)} {'is' if len(missing_vars) == 1 else 'are'} not in the environment."
+        )
 
     token_url = f"https://{oidc_issuer}/protocol/openid-connect/token"
 
+    data = {
+        "grant_type": "password",
+        "username": username,
+        "password": password,
+        "client_id": client_id,
+        "client_secret": client_secret,
+    }
+
+    if otp:
+        data["otp"] = otp
+
     token_response = post(
         token_url,
-        data={
-            "grant_type": "password",
-            "username": username,
-            "password": password,
-            # Tempoararily diabled OTP on direct grant auth method
-            # "otp": os.environ.get("TEST_OTP"),
-            "client_id": client_id,
-            "client_secret": client_secret,
-        },
+        data=data,
         timeout=5,
     )
 
