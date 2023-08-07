@@ -15,6 +15,8 @@ _db_pass = "DB_PASS"
 
 _oidc_audience = "OIDC_AUDIENCE"
 _oidc_issuer = "OIDC_ISSUER"
+_client_id = "CLIENT_ID"
+_client_secret = "CLIENT_SECRET"
 
 app_name = os.environ.get(_app_name, "shtl.ink")
 base_url = os.environ.get(_base_url, "http://localapi.shtl.ink:8000")
@@ -27,6 +29,11 @@ log.info(
 
 oidc_audience = os.environ.get(_oidc_audience, "api.shtl.ink")
 oidc_issuer = os.environ.get(_oidc_issuer, "https://iam.rwx.dev/realms/rwxdev")
+client_id = os.environ.get(_client_id, "api.shtl.ink")
+client_secret = os.environ.get(_client_secret, None)
+
+if client_secret is None:
+    raise Exception("OIDC client secret not set")
 
 db_host = os.environ.get(_db_host, None)
 db_name = os.environ.get(_db_name, None)

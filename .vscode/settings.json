@@ -1,7 +1,9 @@
 {
-    "python.testing.pytestArgs": [
-        "shtl_ink/tests"
-    ],
-    "python.testing.unittestEnabled": true,
-    "python.testing.pytestEnabled": true
+  "python.testing.pytestArgs": ["shtl_ink/tests"],
+  "python.testing.unittestEnabled": true,
+  "python.testing.pytestEnabled": true,
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  }
 }

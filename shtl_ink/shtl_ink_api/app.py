@@ -16,9 +16,12 @@ from .responses import json_response_deleted, json_response_record
 from .responses import json_response_in_use
 from .models import ShortURLModel, ModificiationRequest, UrlRequest
 from .models import CreateRequest, CreateCustomRequest, Base
+from .models import AuthenticationRequest, AuthenticationRefreshRequest
+from .token import get_token, refresh_oidc_token
 from .codec import Codec
 from .database import engine
 from .config import frontend_base_url, oidc_audience, oidc_issuer
+from .config import client_id, client_secret
 
 log = getLogger(__name__)
 log.info("Logger initialized, starting shtl_ink_api...")
@@ -91,7 +94,6 @@ async def root(request: Request):
 
 @app.get("/all_short_codes", dependencies=[Depends(armasec)])
 async def get_all_records(db: Session = Depends(get_db)):
-
     user_id = "anonymous"
     url_records = (
         db.execute(select(ShortURLModel).where(ShortURLModel.owner_id == user_id))
@@ -104,7 +106,6 @@ async def get_all_records(db: Session = Depends(get_db)):
 
 @app.get("/{short_code}")
 async def go_to_url(short_code: str, db: Session = Depends(get_db)):
-
     url_record = db.get(ShortURLModel, (short_code))
 
     if url_record is None:
@@ -117,12 +118,44 @@ async def go_to_url(short_code: str, db: Session = Depends(get_db)):
 
 
 # all endpoints with form data
+@app.post("/auth")
+async def auth(auth_request: AuthenticationRequest):
+    access_token, refresh_token = get_token(
+        auth_request.username,
+        auth_request.password,
+        oidc_issuer,
+        client_id,
+        client_secret,
+    )
+    if access_token is None:
+        return json_response_failure()
+    else:
+        return JSONResponse(
+            {"access_token": access_token, "refresh_token": refresh_token}
+        )
+
+
+@app.post("/auth/refresh")
+async def auth_refresh(auth_refresh_request: AuthenticationRefreshRequest):
+    access_token, refresh_token = refresh_oidc_token(
+        oidc_issuer,
+        client_id,
+        client_secret,
+        auth_refresh_request.refresh_token,
+    )
+    if access_token is None:
+        return json_response_failure()
+    else:
+        return JSONResponse(
+            {"access_token": access_token, "refresh_token": refresh_token}
+        )
+
+
 @app.post("/create_short_code")
 async def create_short_code(
     create_request: CreateRequest,
     db: Session = Depends(get_db),
 ):
-
     user_id = "anonymous"
 
     if create_request.url == "":
@@ -158,7 +191,6 @@ async def create_custom_short_code(
     create_custom_request: CreateCustomRequest,
     db: Session = Depends(get_db),
 ):
-
     user_id = "anonymous"
 
     if create_custom_request.short_code == "" or create_custom_request.url == "":
@@ -194,7 +226,6 @@ async def create_custom_short_code(
 
 @app.post("/short_code")
 async def Get_short_code_url(url_request: UrlRequest, db: Session = Depends(get_db)):
-
     if url_request.short_code == "":
         return json_response_missing("a short code")
 
@@ -223,7 +254,6 @@ async def Delete_url_short_code(
     url_request: UrlRequest,
     db: Session = Depends(get_db),
 ):
-
     user_id = "anonymous"
 
     if url_request.short_code == "":
@@ -254,7 +284,6 @@ async def delete_url_short_code(
     short_code: str,
     db: Session = Depends(get_db),
 ):
-
     user_id = "anonymous"
 
     url_record = db.get(ShortURLModel, (short_code))
@@ -282,7 +311,6 @@ async def modify_url_short_code(
     mod_request: ModificiationRequest,
     db: Session = Depends(get_db),
 ):
-
     user_id = "anonymous"
 
     if mod_request.short_code == "" or mod_request.new_short_code == "":

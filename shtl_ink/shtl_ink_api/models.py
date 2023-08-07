@@ -29,6 +29,15 @@ class ShortURLModel(Base, SerializerMixin):
                  short_code={self.short_code!r})"
 
 
+class AuthenticationRequest(BaseModel):
+    username: str
+    password: str
+
+
+class AuthenticationRefreshRequest(BaseModel):
+    refresh_token: str
+
+
 class ModificiationRequest(BaseModel):
     short_code: str
     new_short_code: str
