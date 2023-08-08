@@ -14,6 +14,7 @@ from .responses import json_response_in_use
 from .models import ShortURLModel, ModificiationRequest, UrlRequest
 from .models import CreateRequest, CreateCustomRequest, Base
 from .models import AuthenticationRequest, AuthenticationRefreshRequest
+from armasec import OpenidConfigLoader
 from .keycloak_armasec import KeycloakArmasec
 from .get_token import get_oidc_token, refresh_oidc_token
 from .codec import Codec
@@ -28,7 +29,14 @@ Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
 
-armasec = KeycloakArmasec(oidc_issuer, oidc_audience, scopes=["get:all_short_codes"])
+openid_config = OpenidConfigLoader(domain=oidc_issuer, use_https=True)
+
+armasec_all_short_codes = KeycloakArmasec(
+    openid_config, oidc_audience, scopes=["get:all_short_codes"]
+)
+armasec_create_short_code = KeycloakArmasec(
+    openid_config, oidc_audience, scopes=["post:create_short_code"]
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -63,7 +71,7 @@ async def root(request: Request):
     )
 
 
-@app.get("/all_short_codes", dependencies=[Depends(armasec)])
+@app.get("/all_short_codes", dependencies=[Depends(armasec_all_short_codes)])
 async def get_all_records(db: Session = Depends(get_db)):
     user_id = "anonymous"
     url_records = (
@@ -122,7 +130,7 @@ async def auth_refresh(auth_refresh_request: AuthenticationRefreshRequest):
         )
 
 
-@app.post("/create_short_code")
+@app.post("/create_short_code", dependencies=[Depends(armasec_create_short_code)])
 async def create_short_code(
     create_request: CreateRequest,
     db: Session = Depends(get_db),

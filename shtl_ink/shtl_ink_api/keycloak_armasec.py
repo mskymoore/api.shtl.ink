@@ -56,16 +56,16 @@ class KeycloakTokenDecoder(TokenDecoder):
 class KeycloakArmasec:
     def __init__(
         self,
-        realm_uri: str,
+        openid_config: OpenidConfigLoader,
         audience: str,
         scopes: list[str] = None,
         debug_logger: Optional[Callable[..., None]] = None,
     ):
-        self.openid_config = OpenidConfigLoader(
-            domain=realm_uri, use_https=True, debug_logger=debug_logger
-        )
+        self.openid_config = openid_config
 
-        self.domain_config = DomainConfig(domain=realm_uri, audience=audience)
+        self.domain_config = DomainConfig(
+            domain=openid_config.domain, audience=audience
+        )
 
         self.token_decoder = KeycloakTokenDecoder(
             jwks=self.openid_config.jwks,
@@ -90,5 +90,5 @@ class KeycloakArmasec:
         )
         self.armasec.managers = [self.token_manager_config]
 
-    def __call__(self, request: Request) -> TokenPayload:
-        return self.armasec(request)
+    async def __call__(self, request: Request) -> TokenPayload:
+        return await self.armasec(request)

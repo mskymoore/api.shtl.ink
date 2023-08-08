@@ -25,7 +25,8 @@ if __name__ == "__main__":
     access_token = response_json["access_token"]
 
     key_url = "https://iam.rwx.dev/realms/rwxdev/protocol/openid-connect/certs"
-    print(json.dumps(decode_token(access_token, key_url, "api.shtl.ink"), indent=4))
+
+    # print(json.dumps(decode_token(access_token, key_url, "api.shtl.ink"), indent=4))
     refresh_token = response_json["refresh_token"]
 
     # url = "https://iam.rwx.dev/realms/rwxdev/protocol/openid-connect/certs"
@@ -40,6 +41,15 @@ if __name__ == "__main__":
         response = get(
             "http://localhost:8000/all_short_codes",
             headers={"Authorization": f"Bearer {access_token}"},
+        )
+        print(response.json())
+
+    print("Creating short code...")
+    if access_token:
+        response = post(
+            "http://localhost:8000/create_short_code",
+            headers={"Authorization": f"Bearer {access_token}"},
+            json={"url": "https://www.reddit.com"},
         )
         print(response.json())
 
