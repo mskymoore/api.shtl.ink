@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from armasec import OpenidConfigLoader, TokenManager, TokenDecoder, TokenSecurity
+from armasec import OpenidConfigLoader, TokenManager, TokenSecurity
 from armasec.schemas.armasec_config import DomainConfig
 from armasec.token_security import ManagerConfig
 from starlette.responses import RedirectResponse, JSONResponse
@@ -17,7 +17,8 @@ from .responses import json_response_in_use
 from .models import ShortURLModel, ModificiationRequest, UrlRequest
 from .models import CreateRequest, CreateCustomRequest, Base
 from .models import AuthenticationRequest, AuthenticationRefreshRequest
-from .token import get_token, refresh_oidc_token
+from .keycloak_token_decoder import KeycloakTokenDecoder
+from .token import get_oidc_token, refresh_oidc_token
 from .codec import Codec
 from .database import engine
 from .config import frontend_base_url, oidc_audience, oidc_issuer
@@ -39,7 +40,7 @@ domain_config = DomainConfig(domain=oidc_issuer, audience=oidc_audience)
 # decode_options_override = {"verify_exp": False}
 # decode_options_override = {}
 
-token_decoder = TokenDecoder(
+token_decoder = KeycloakTokenDecoder(
     jwks=openid_config.jwks,
     debug_logger=log.debug,
     # decode_options_override=decode_options_override,
@@ -55,7 +56,9 @@ token_manager = TokenManager(
 token_manager_config = ManagerConfig(manager=token_manager, domain_config=domain_config)
 
 armasec = TokenSecurity(
-    domain_configs=[domain_config], debug_logger=log.debug  # , debug_exceptions=True
+    domain_configs=[domain_config],
+    scopes=["get:all_short_codes"],
+    debug_logger=log.debug,  # , debug_exceptions=True
 )
 armasec.managers = [token_manager_config]
 
@@ -120,7 +123,7 @@ async def go_to_url(short_code: str, db: Session = Depends(get_db)):
 # all endpoints with form data
 @app.post("/auth")
 async def auth(auth_request: AuthenticationRequest):
-    access_token, refresh_token = get_token(
+    access_token, refresh_token = get_oidc_token(
         auth_request.username,
         auth_request.password,
         oidc_issuer,
