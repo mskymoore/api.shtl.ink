@@ -54,6 +54,8 @@ class KeycloakTokenDecoder(TokenDecoder):
 
 
 class KeycloakArmasec:
+    # TODO: make this mirror the Armasec class and make sure that the lock shows up
+    #       in the swagger docs.
     def __init__(
         self,
         openid_config: OpenidConfigLoader,
