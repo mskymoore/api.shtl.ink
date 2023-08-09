@@ -20,6 +20,7 @@ from .codec import Codec
 from .database import engine
 from .config import frontend_base_url, oidc_audience, oidc_issuer
 from .config import client_id, client_secret, realm
+from .resources import init_keycloak_resources
 
 log = getLogger(__name__)
 log.info("Logger initialized, starting shtl_ink_api...")
@@ -27,6 +28,11 @@ log.info("Logger initialized, starting shtl_ink_api...")
 Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
+
+
+resources_initialized = init_keycloak_resources(
+    oidc_issuer, realm, client_id, client_secret
+)
 
 armasec = KeycloakArmasec(
     domain=f"{oidc_issuer}/realms/{realm}", audience=oidc_audience
