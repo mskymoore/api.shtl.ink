@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 from jose import jwt
 from starlette.requests import Request
 from armasec import OpenidConfigLoader, TokenManager, TokenSecurity
@@ -8,7 +8,7 @@ from armasec.exceptions import AuthenticationError
 from armasec.token_payload import TokenPayload
 from armasec.utilities import log_error
 from armasec.schemas.armasec_config import DomainConfig
-from armasec.token_security import ManagerConfig
+from armasec.token_security import ManagerConfig, PermissionMode
 
 
 class KeycloakTokenDecoder(TokenDecoder):
@@ -58,15 +58,18 @@ class KeycloakArmasec:
     #       in the swagger docs.
     def __init__(
         self,
-        openid_config: OpenidConfigLoader,
-        audience: str,
-        scopes: list[str] = None,
+        domain_configs: Optional[List[DomainConfig]] = None,
         debug_logger: Optional[Callable[..., None]] = None,
+        debug_exceptions: bool = False,
+        **kwargs,
     ):
-        self.openid_config = openid_config
+        self.debug_logger = debug_logger
+        self.debug_exceptions = debug_exceptions
 
-        self.domain_config = DomainConfig(
-            domain=openid_config.domain, audience=audience
+        self.domain_config = DomainConfig(**kwargs)
+
+        self.openid_config = OpenidConfigLoader(
+            domain=self.domain_config.domain, use_https=True
         )
 
         self.token_decoder = KeycloakTokenDecoder(
@@ -77,7 +80,7 @@ class KeycloakArmasec:
         self.token_manager = TokenManager(
             openid_config=self.openid_config,
             token_decoder=self.token_decoder,
-            audience=audience,
+            audience=kwargs["audience"],
             debug_logger=debug_logger,
         )
 
@@ -85,12 +88,21 @@ class KeycloakArmasec:
             manager=self.token_manager, domain_config=self.domain_config
         )
 
-        self.armasec = TokenSecurity(
-            domain_configs=[self.domain_config],
+    def lockdown(
+        self, *scopes: str, permission_mode: PermissionMode = PermissionMode.ALL
+    ) -> TokenSecurity:
+        lockdown_security = TokenSecurity(
+            domain_configs=self.domain_config,
             scopes=scopes,
-            debug_logger=debug_logger,
+            permission_mode=permission_mode,
+            debug_logger=self.debug_logger,
+            debug_exceptions=self.debug_exceptions,
         )
-        self.armasec.managers = [self.token_manager_config]
+        lockdown_security.managers = [self.token_manager_config]
+        return lockdown_security
 
-    async def __call__(self, request: Request) -> TokenPayload:
-        return await self.armasec(request)
+    def lockdown_all(self, *scopes: str) -> TokenSecurity:
+        return self.lockdown(*scopes, permission_mode=PermissionMode.ALL)
+
+    def lockdown_some(self, *scopes: str) -> TokenSecurity:
+        return self.lockdown(*scopes, permission_mode=PermissionMode.SOME)

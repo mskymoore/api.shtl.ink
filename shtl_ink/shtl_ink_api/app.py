@@ -29,14 +29,7 @@ Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
 
-openid_config = OpenidConfigLoader(domain=oidc_issuer, use_https=True)
-
-armasec_all_short_codes = KeycloakArmasec(
-    openid_config, oidc_audience, scopes=["get:all_short_codes"]
-)
-armasec_create_short_code = KeycloakArmasec(
-    openid_config, oidc_audience, scopes=["post:create_short_code"]
-)
+armasec = KeycloakArmasec(domain=oidc_issuer, audience=oidc_audience)
 
 app.add_middleware(
     CORSMiddleware,
@@ -71,7 +64,9 @@ async def root(request: Request):
     )
 
 
-@app.get("/all_short_codes", dependencies=[Depends(armasec_all_short_codes)])
+@app.get(
+    "/all_short_codes", dependencies=[Depends(armasec.lockdown("get:all_short_codes"))]
+)
 async def get_all_records(db: Session = Depends(get_db)):
     user_id = "anonymous"
     url_records = (
@@ -130,7 +125,10 @@ async def auth_refresh(auth_refresh_request: AuthenticationRefreshRequest):
         )
 
 
-@app.post("/create_short_code", dependencies=[Depends(armasec_create_short_code)])
+@app.post(
+    "/create_short_code",
+    dependencies=[Depends(armasec.lockdown("post:create_short_code"))],
+)
 async def create_short_code(
     create_request: CreateRequest,
     db: Session = Depends(get_db),
