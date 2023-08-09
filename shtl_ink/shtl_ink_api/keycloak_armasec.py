@@ -2,6 +2,7 @@ from functools import partial
 from typing import Callable, List, Optional
 from jose import jwt
 from starlette.requests import Request
+from fastapi import HTTPException, status
 from armasec import OpenidConfigLoader, TokenManager, TokenSecurity
 from armasec.token_decoder import TokenDecoder
 from armasec.exceptions import AuthenticationError
@@ -54,8 +55,6 @@ class KeycloakTokenDecoder(TokenDecoder):
 
 
 class KeycloakArmasec:
-    # TODO: make this mirror the Armasec class and make sure that the lock shows up
-    #       in the swagger docs.
     def __init__(
         self,
         domain_configs: Optional[List[DomainConfig]] = None,
@@ -63,42 +62,62 @@ class KeycloakArmasec:
         debug_exceptions: bool = False,
         **kwargs,
     ):
+        primary_domain_config = DomainConfig(**kwargs)
+        if primary_domain_config.domain:
+            self.domain_configs = [primary_domain_config]
+        elif domain_configs is not None:
+            self.domain_configs = domain_configs
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="No domain was input.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         self.debug_logger = debug_logger
         self.debug_exceptions = debug_exceptions
 
-        self.domain_config = DomainConfig(**kwargs)
+        self.openid_configs = [
+            OpenidConfigLoader(domain=domain_config.domain, use_https=True)
+            for domain_config in self.domain_configs
+        ]
 
-        self.openid_config = OpenidConfigLoader(
-            domain=self.domain_config.domain, use_https=True
-        )
+        self.token_decoders = [
+            KeycloakTokenDecoder(
+                jwks=openid_config.jwks,
+                debug_logger=debug_logger,
+            )
+            for openid_config in self.openid_configs
+        ]
 
-        self.token_decoder = KeycloakTokenDecoder(
-            jwks=self.openid_config.jwks,
-            debug_logger=debug_logger,
-        )
+        self.token_managers = [
+            TokenManager(
+                openid_config=openid_config,
+                token_decoder=token_decoder,
+                audience=domain_config.audience,
+                debug_logger=debug_logger,
+            )
+            for openid_config, token_decoder, domain_config in zip(
+                self.openid_configs, self.token_decoders, self.domain_configs
+            )
+        ]
 
-        self.token_manager = TokenManager(
-            openid_config=self.openid_config,
-            token_decoder=self.token_decoder,
-            audience=kwargs["audience"],
-            debug_logger=debug_logger,
-        )
-
-        self.token_manager_config = ManagerConfig(
-            manager=self.token_manager, domain_config=self.domain_config
-        )
+        self.token_manager_configs = [
+            ManagerConfig(manager=token_manager, domain_config=primary_domain_config)
+            for token_manager in self.token_managers
+        ]
 
     def lockdown(
         self, *scopes: str, permission_mode: PermissionMode = PermissionMode.ALL
     ) -> TokenSecurity:
         lockdown_security = TokenSecurity(
-            domain_configs=self.domain_config,
+            domain_configs=self.domain_configs,
             scopes=scopes,
             permission_mode=permission_mode,
             debug_logger=self.debug_logger,
             debug_exceptions=self.debug_exceptions,
         )
-        lockdown_security.managers = [self.token_manager_config]
+        lockdown_security.managers = self.token_manager_configs
         return lockdown_security
 
     def lockdown_all(self, *scopes: str) -> TokenSecurity:
