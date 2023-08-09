@@ -17,6 +17,7 @@ _oidc_audience = "OIDC_AUDIENCE"
 _oidc_issuer = "OIDC_ISSUER"
 _client_id = "CLIENT_ID"
 _client_secret = "CLIENT_SECRET"
+_realm = "REALM"
 
 app_name = os.environ.get(_app_name, "shtl.ink")
 base_url = os.environ.get(_base_url, "http://localapi.shtl.ink:8000")
@@ -31,6 +32,7 @@ oidc_audience = os.environ.get(_oidc_audience, "api.shtl.ink")
 oidc_issuer = os.environ.get(_oidc_issuer, "https://iam.rwx.dev/realms/rwxdev")
 client_id = os.environ.get(_client_id, "api.shtl.ink")
 client_secret = os.environ.get(_client_secret, None)
+realm = os.environ.get(_realm, "rwxdev")
 
 if client_secret is None:
     raise Exception("OIDC client secret not set")

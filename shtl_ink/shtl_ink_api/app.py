@@ -14,13 +14,12 @@ from .responses import json_response_in_use
 from .models import ShortURLModel, ModificiationRequest, UrlRequest
 from .models import CreateRequest, CreateCustomRequest, Base
 from .models import AuthenticationRequest, AuthenticationRefreshRequest
-from armasec import OpenidConfigLoader
 from .keycloak_armasec import KeycloakArmasec
 from .get_token import get_oidc_token, refresh_oidc_token
 from .codec import Codec
 from .database import engine
 from .config import frontend_base_url, oidc_audience, oidc_issuer
-from .config import client_id, client_secret
+from .config import client_id, client_secret, realm
 
 log = getLogger(__name__)
 log.info("Logger initialized, starting shtl_ink_api...")
@@ -29,7 +28,9 @@ Base.metadata.create_all(bind=engine)
 codec = Codec()
 app = FastAPI()
 
-armasec = KeycloakArmasec(domain=oidc_issuer, audience=oidc_audience)
+armasec = KeycloakArmasec(
+    domain=f"{oidc_issuer}/realms/{realm}", audience=oidc_audience
+)
 
 app.add_middleware(
     CORSMiddleware,
